@@ -37,7 +37,6 @@ async function fetchOnlineIDs(url) {
 // 🧠 LIMPIAR LISTAS
 function cleanList(str) {
   if (!str) return [];
-
   return str.split(",")
     .map(x => x.trim())
     .filter(x =>
@@ -48,13 +47,13 @@ function cleanList(str) {
     );
 }
 
-// 🎨 FORMATO
+// 🎨 FORMATO LISTAS
 function formatList(arr) {
   if (!arr.length) return "-";
   return arr.join(" • ");
 }
 
-// 🧠 PARSE
+// 🧠 PARSE STATS
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -66,7 +65,7 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECCIÓN
+// 🔍 DETECTAR MENSAJE
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
 
@@ -99,11 +98,12 @@ async function fetchMessagesByHours(channel, hours) {
   }
 }
 
-// 📊 GLOBAL STATS
-function calculateGlobalStats(onlineStats, messages24h) {
+// 📊 GLOBAL STATS (OPTIMIZADO)
+function calculateGlobalStats(onlineStats, messages12h) {
   let totalPPM = 0;
   let totalInstances = 0;
-  let totalPacks = 0;
+
+  const userMaxPacks = {};
 
   for (const s of onlineStats) {
     totalPPM += Number(s.ppm);
@@ -112,28 +112,50 @@ function calculateGlobalStats(onlineStats, messages24h) {
     totalInstances += filtered.length;
   }
 
-  // 🎴 packs en 24h
-  for (const msg of messages24h) {
+  // 🎴 MAX PACKS POR USUARIO (12h)
+  for (const msg of messages12h) {
+    const username = msg.content.split("\n")[0]?.toLowerCase();
     const packs = msg.content.match(/Packs:\s(\d+)/)?.[1];
-    if (packs) totalPacks += Number(packs);
+
+    if (!username || !packs) continue;
+
+    if (!userMaxPacks[username] || Number(packs) > userMaxPacks[username]) {
+      userMaxPacks[username] = Number(packs);
+    }
   }
+
+  const totalPacks = Object.values(userMaxPacks).reduce((a, b) => a + b, 0);
 
   const activeUsers = onlineStats.length;
 
+  // 📈 DERIVADOS
+  const avgPPM = activeUsers > 0 ? totalPPM / activeUsers : 0;
+  const avgInstances = activeUsers > 0 ? totalInstances / activeUsers : 0;
+
   const rate = 0.0005;
   const expectedPacks = 1 / rate;
+
   const minutesToGP = totalPPM > 0 ? expectedPacks / totalPPM : 0;
+  const gpPerHour = totalPPM > 0 ? (60 / minutesToGP) : 0;
+
+  const packsPerMinute = totalPPM;
+  const timeTo10GP = minutesToGP * 10;
 
   return {
     totalPPM: totalPPM.toFixed(2),
-    totalInstances,
     totalPacks,
+    totalInstances,
     activeUsers,
-    minutesToGP: minutesToGP.toFixed(1)
+    avgPPM: avgPPM.toFixed(2),
+    avgInstances: avgInstances.toFixed(1),
+    minutesToGP: minutesToGP.toFixed(1),
+    gpPerHour: gpPerHour.toFixed(2),
+    packsPerMinute: packsPerMinute.toFixed(2),
+    timeTo10GP: timeTo10GP.toFixed(1)
   };
 }
 
-// 📊 PANEL
+// 📊 GENERAR PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -141,7 +163,6 @@ async function generatePanel() {
   const channel = await client.channels.fetch(heartbeatChannelId);
 
   const messages12h = await fetchMessagesByHours(channel, 12);
-  const messages24h = await fetchMessagesByHours(channel, 24);
 
   let onlineList = [];
   let offlineList = [];
@@ -181,7 +202,7 @@ async function generatePanel() {
     }
   }
 
-  const global = calculateGlobalStats(onlineStats, messages24h);
+  const global = calculateGlobalStats(onlineStats, messages12h);
 
   return [
     new EmbedBuilder()
@@ -203,14 +224,22 @@ async function generatePanel() {
       .setTitle("📊 Global Reroll Stats")
       .setColor(0xF1C40F)
       .setDescription(
-        `🔥 **⚡ TOTAL PPM: ${global.totalPPM} ⚡**\n\n` + // 👈 MÁS GRANDE / DESTACADO
+        `⚡ PPM\n` +
+        `# **${global.totalPPM}**\n\n` +
 
-        `🎴 Packs (24h): ${global.totalPacks}\n` +
-        `🔥 Active Instances: ${global.totalInstances}\n` +
-        `👥 Active Rerollers: ${global.activeUsers}\n\n` +
+        `👥 Rerollers: ${global.activeUsers}\n` +
+        `🎴 Packs (12h): ${global.totalPacks}\n` +
+        `🔥 Active Instances: ${global.totalInstances}\n\n` +
 
-        `🎯 **GP Prediction**\n` +
-        `≈ ${global.minutesToGP} min / GP`
+        `📈 **Performance**\n` +
+        `⚡ Avg PPM: ${global.avgPPM}\n` +
+        `🔥 Avg Instances: ${global.avgInstances}\n` +
+        `📦 Packs/min: ${global.packsPerMinute}\n\n` +
+
+        `🎯 **GP Stats**\n` +
+        `⏱ ${global.minutesToGP} min / GP\n` +
+        `🚀 ${global.gpPerHour} GP/hour\n` +
+        `🎯 ${global.timeTo10GP} min / 10 GP`
       )
       .setTimestamp()
   ];
