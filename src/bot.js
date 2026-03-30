@@ -52,7 +52,13 @@ function cleanList(str) {
     );
 }
 
-// 🧠 PARSE
+// 🎨 FORMATO BONITO LISTAS
+function formatList(arr) {
+  if (!arr || arr.length === 0) return "-";
+  return arr.join(" • ");
+}
+
+// 🧠 PARSE STATS
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -67,7 +73,7 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECCIÓN
+// 🔍 DETECTAR MENSAJE
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
 
@@ -77,7 +83,7 @@ function findLastUserMessage(messages, username) {
   });
 }
 
-// 📥 500 MENSAJES
+// 📥 OBTENER 500 MENSAJES
 async function fetchLastMessages(channel) {
   let all = [];
   let lastId = null;
@@ -96,7 +102,7 @@ async function fetchLastMessages(channel) {
   return all;
 }
 
-// 📊 PANEL
+// 📊 GENERAR PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -120,11 +126,12 @@ async function generatePanel() {
       const stats = parseStats(msg.content);
 
       if (isOnline) {
-        // 🟢 ONLINE (3 líneas)
+        // 🟢 ONLINE
         onlineList.push(
-          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `🔥 ${stats.online.join(",") || "-"}\n` +
-          `💤 ${stats.offline.join(",") || "-"}`
+          `⚔️ **__${user.name}__**\n` +
+          `⚡ **PPM:** ${stats.ppm} | 📦 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
+          `🔥 ${formatList(stats.online)}\n` +
+          `💤 ${formatList(stats.offline)}`
         );
 
       } else {
@@ -132,13 +139,14 @@ async function generatePanel() {
         const all = [...stats.online, ...stats.offline];
 
         offlineList.push(
-          `💤 **${user.name}** | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `💤 ${all.join(",") || "-"}`
+          `💤 **__${user.name}__**\n` +
+          `📦 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
+          `💤 ${formatList(all)}`
         );
       }
 
     } else {
-      const noData = `💤 **${user.name}** | No data`;
+      const noData = `💤 **__${user.name}__** | No data`;
 
       isOnline ? onlineList.push(noData) : offlineList.push(noData);
     }
