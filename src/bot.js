@@ -281,7 +281,7 @@ async function generatePanel() {
 
   //`📅 **LAST 5 DAYS**\n${gp.historyText}`
 //(
-  ];
+ // ];
 }
 
 // 🚀 START
