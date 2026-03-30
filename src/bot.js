@@ -37,6 +37,26 @@ async function fetchJSON(url) {
   return res.data;
 }
 
+async function fetchGPStats() {
+  try {
+    const res = await fetch(`${GP_GIST_URL}?t=${Date.now()}`);
+    const data = await res.json();
+
+    return {
+      todayGP: data.totalGP || 0,
+      todayAlive: data.totalAlive || 0,
+      history: data.history || []
+    };
+  } catch (err) {
+    console.error("Error fetching GP stats:", err);
+    return {
+      todayGP: 0,
+      todayAlive: 0,
+      history: []
+    };
+  }
+}
+
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data.split("\n").map(x => x.trim()).filter(Boolean);
