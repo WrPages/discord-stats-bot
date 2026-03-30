@@ -58,7 +58,7 @@ function formatList(arr) {
   return arr.join(" • ");
 }
 
-// 🧠 PARSE
+// 🧠 PARSE STATS
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -73,7 +73,7 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECCIÓN
+// 🔍 DETECTAR MENSAJE MÁS RECIENTE POR USUARIO
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
 
@@ -83,26 +83,33 @@ function findLastUserMessage(messages, username) {
   });
 }
 
-// 📥 500 MENSAJES
+// 📥 OBTENER MENSAJES DE LAS ÚLTIMAS 12 HORAS
 async function fetchLastMessages(channel) {
   let all = [];
   let lastId = null;
 
-  while (all.length < 500) {
+  const now = Date.now();
+  const limitTime = now - (12 * 60 * 60 * 1000); // 12h
+
+  while (true) {
     const options = { limit: 100 };
     if (lastId) options.before = lastId;
 
     const msgs = await channel.messages.fetch(options);
     if (!msgs.size) break;
 
-    all.push(...msgs.values());
+    for (const msg of msgs.values()) {
+      if (msg.createdTimestamp < limitTime) {
+        return all; // ⛔ detenemos cuando pasamos las 12h
+      }
+      all.push(msg);
+    }
+
     lastId = msgs.last().id;
   }
-
-  return all;
 }
 
-// 📊 PANEL
+// 📊 GENERAR PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -126,7 +133,7 @@ async function generatePanel() {
       const stats = parseStats(msg.content);
 
       if (isOnline) {
-        // 🟢 ONLINE (SIN CAMBIOS)
+        // 🟢 ONLINE
         onlineList.push(
           `⚔️ **__${user.name}__**\n` +
           `⚡ **PPM:** ${stats.ppm} | 🧧 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
@@ -149,7 +156,7 @@ async function generatePanel() {
   }
 
   return new EmbedBuilder()
-    .setTitle("🐉 Dragon Reroll Dashboard")
+    .setTitle("General stats")
     .setColor(0x5865F2)
     .addFields(
       {
@@ -180,7 +187,7 @@ client.once('ready', async () => {
     } catch (err) {
       console.error("❌ Update error:", err);
     }
-  }, 300000);
+  }, 300000); // 5 minutos
 });
 
 // 🔐 LOGIN
