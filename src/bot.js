@@ -20,7 +20,7 @@ const ppmFileName = "ppm.json";
 const gpUrl = "https://gist.githubusercontent.com/WrPages/4773653072f4851e91958a333e503de9/raw/gp_live_stats.json";
 
 const heartbeatChannelId = "1483616146996465735";
-const panelChannelId = "1484015417411244082";
+const panelChannelId = "1488126321786753156";
 
 // 🤖 CLIENT
 const client = new Client({
