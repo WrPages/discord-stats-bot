@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
-// 🔐 TOKEN
+// 🔐 TOKEN (Railway)
 const TOKEN = process.env.LATIOS_TOKEN;
 
 if (!TOKEN) {
@@ -9,7 +9,7 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-// 📊 CONFIG
+// 📊 CONFIG (en código)
 const statsUrl = "https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json";
 const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496fd6cc830f9ca6e9/raw/elite_ids.txt";
 
@@ -29,7 +29,7 @@ async function fetchJSON(url) {
   return res.data;
 }
 
-// 📥 FETCH TXT
+// 📥 FETCH TXT (IDs online)
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data
@@ -38,7 +38,7 @@ async function fetchOnlineIDs(url) {
     .filter(Boolean);
 }
 
-// 🧠 PARSE STATS
+// 🧠 PARSE STATS DEL MENSAJE
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -84,7 +84,7 @@ async function fetchLastMessages(channel) {
   return allMessages;
 }
 
-// 📊 PANEL
+// 📊 GENERAR PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -107,19 +107,41 @@ async function generatePanel() {
     if (msg) {
       const stats = parseStats(msg.content);
 
-      const userLine =
-        `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-        `🔥 ${stats.online}\n` +
-        `💤 ${stats.offline}`;
-
       if (isOnline) {
-        onlineList.push(userLine);
+        // 🟢 ONLINE → FULL DATA
+        onlineList.push(
+          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+          `🔥 ${stats.online}\n` +
+          `💤 ${stats.offline}`
+        );
+
       } else {
-        offlineList.push(userLine);
+        // 💤 OFFLINE → SOLO PACKS + TIME + TODO COMO INACTIVO
+
+        let allInstances = [];
+
+        if (stats.online && stats.online !== "-") {
+          allInstances.push(...stats.online.split(","));
+        }
+
+        if (stats.offline && stats.offline !== "-") {
+          allInstances.push(...stats.offline.split(","));
+        }
+
+        allInstances = allInstances.map(x => x.trim()).filter(Boolean);
+
+        const allOffline = allInstances.length > 0
+          ? allInstances.join(",")
+          : "-";
+
+        offlineList.push(
+          `💤 **${user.name}** | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+          `💤 ${allOffline}`
+        );
       }
 
     } else {
-      const noData = `⚔️ **${user.name}** | No data`;
+      const noData = `💤 **${user.name}** | No data`;
 
       if (isOnline) {
         onlineList.push(noData);
@@ -145,7 +167,7 @@ async function generatePanel() {
     .setTimestamp();
 }
 
-// 🚀 READY
+// 🚀 INICIO
 client.once('ready', async () => {
   console.log(`✅ Bot ready: ${client.user.tag}`);
 
@@ -162,7 +184,7 @@ client.once('ready', async () => {
     } catch (err) {
       console.error("❌ Update error:", err);
     }
-  }, 300000); // 5 minutos
+  }, 300000);
 });
 
 // 🔐 LOGIN
