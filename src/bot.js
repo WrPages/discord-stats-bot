@@ -23,13 +23,12 @@ const client = new Client({
 
 let panelMessage = null;
 
-// 📥 FETCH JSON
+// 📥 FETCH
 async function fetchJSON(url) {
   const res = await axios.get(url);
   return res.data;
 }
 
-// 📥 FETCH TXT
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data
@@ -53,7 +52,7 @@ function cleanList(str) {
     );
 }
 
-// 🧠 PARSE STATS
+// 🧠 PARSE
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -68,7 +67,7 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECTAR MENSAJE
+// 🔍 DETECCIÓN
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
 
@@ -78,7 +77,7 @@ function findLastUserMessage(messages, username) {
   });
 }
 
-// 📥 OBTENER HASTA 500 MENSAJES
+// 📥 500 MENSAJES
 async function fetchLastMessages(channel) {
   let all = [];
   let lastId = null;
@@ -97,7 +96,7 @@ async function fetchLastMessages(channel) {
   return all;
 }
 
-// 📊 GENERAR PANEL
+// 📊 PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -121,17 +120,20 @@ async function generatePanel() {
       const stats = parseStats(msg.content);
 
       if (isOnline) {
-        // 🟢 ONLINE → TODO EN UNA LÍNEA
+        // 🟢 ONLINE (3 líneas)
         onlineList.push(
-          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time} | 🔥 ${stats.online.join(",") || "-"} | 💤 ${stats.offline.join(",") || "-"}`
+          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+          `🔥 ${stats.online.join(",") || "-"}\n` +
+          `💤 ${stats.offline.join(",") || "-"}`
         );
 
       } else {
-        // 💤 OFFLINE → TODO COMO INACTIVO
+        // 💤 OFFLINE
         const all = [...stats.online, ...stats.offline];
 
         offlineList.push(
-          `💤 **${user.name}** | 📦 ${stats.packs} | ⏱ ${stats.time} | 💤 ${all.join(",") || "-"}`
+          `💤 **${user.name}** | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+          `💤 ${all.join(",") || "-"}`
         );
       }
 
@@ -148,17 +150,17 @@ async function generatePanel() {
     .addFields(
       {
         name: `🟢 **ACTIVE USERS (${onlineList.length})**`,
-        value: onlineList.join("\n") || "No active users"
+        value: onlineList.join("\n\n") || "No active users"
       },
       {
         name: `🔴 **INACTIVE USERS (${offlineList.length})**`,
-        value: offlineList.join("\n") || "No inactive users"
+        value: offlineList.join("\n\n") || "No inactive users"
       }
     )
     .setTimestamp();
 }
 
-// 🚀 READY
+// 🚀 START
 client.once('ready', async () => {
   console.log(`✅ Bot ready: ${client.user.tag}`);
 
@@ -167,7 +169,6 @@ client.once('ready', async () => {
   const embed = await generatePanel();
   panelMessage = await panelChannel.send({ embeds: [embed] });
 
-  // 🔁 CADA 5 MINUTOS
   setInterval(async () => {
     try {
       const newEmbed = await generatePanel();
