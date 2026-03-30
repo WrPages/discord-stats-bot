@@ -50,19 +50,38 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECCIÓN MEJORADA
-function findUserMessage(messages, username) {
+// 🔍 BUSCAR ÚLTIMO MENSAJE DE USUARIO
+function findLastUserMessage(messages, username) {
   const lowerName = username.toLowerCase();
 
   return messages.find(msg => {
     const content = msg.content.toLowerCase();
 
     return (
-      content.startsWith(lowerName) || // caso ideal
-      content.includes(`\n${lowerName}`) || // nombre en nueva línea
-      content.includes(lowerName) // fallback (más flexible)
+      content.startsWith(lowerName) ||
+      content.includes(`\n${lowerName}`) ||
+      content.includes(lowerName)
     );
   });
+}
+
+// 📥 OBTENER HASTA 500 MENSAJES
+async function fetchLastMessages(channel) {
+  let allMessages = [];
+  let lastId = null;
+
+  while (allMessages.length < 500) {
+    const options = { limit: 100 };
+    if (lastId) options.before = lastId;
+
+    const messages = await channel.messages.fetch(options);
+    if (!messages.size) break;
+
+    allMessages.push(...messages.values());
+    lastId = messages.last().id;
+  }
+
+  return allMessages;
 }
 
 // 📊 PANEL
@@ -71,7 +90,7 @@ async function generatePanel() {
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
 
   const channel = await client.channels.fetch(heartbeatChannelId);
-  const messages = await channel.messages.fetch({ limit: 50 }); // 👈 más mensajes
+  const messages = await fetchLastMessages(channel);
 
   let onlineList = [];
   let offlineList = [];
@@ -83,23 +102,30 @@ async function generatePanel() {
       onlineIDs.includes(user.main_id) ||
       (user.sec_id && onlineIDs.includes(user.sec_id));
 
-    if (isOnline) {
-      const msg = findUserMessage(messages, user.name);
+    const msg = findLastUserMessage(messages, user.name);
 
-      if (msg) {
-        const stats = parseStats(msg.content);
+    if (msg) {
+      const stats = parseStats(msg.content);
 
-        onlineList.push(
-          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `🔥 ${stats.online}\n` +
-          `💤 ${stats.offline}`
-        );
+      const userLine =
+        `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+        `🔥 ${stats.online}\n` +
+        `💤 ${stats.offline}`;
+
+      if (isOnline) {
+        onlineList.push(userLine);
       } else {
-        onlineList.push(`⚔️ **${user.name}** | No data`);
+        offlineList.push(userLine);
       }
 
     } else {
-      offlineList.push(`💤 ${user.name}`);
+      const noData = `⚔️ **${user.name}** | No data`;
+
+      if (isOnline) {
+        onlineList.push(noData);
+      } else {
+        offlineList.push(noData);
+      }
     }
   }
 
@@ -113,7 +139,7 @@ async function generatePanel() {
       },
       {
         name: `🔴 **INACTIVE USERS (${offlineList.length})**`,
-        value: offlineList.join("\n") || "No inactive users"
+        value: offlineList.join("\n\n") || "No inactive users"
       }
     )
     .setTimestamp();
@@ -128,6 +154,7 @@ client.once('ready', async () => {
   const embed = await generatePanel();
   panelMessage = await panelChannel.send({ embeds: [embed] });
 
+  // 🔁 ACTUALIZAR CADA 5 MINUTOS
   setInterval(async () => {
     try {
       const newEmbed = await generatePanel();
@@ -135,7 +162,7 @@ client.once('ready', async () => {
     } catch (err) {
       console.error("❌ Update error:", err);
     }
-  }, 30000);
+  }, 300000); // 5 minutos
 });
 
 // 🔐 LOGIN
