@@ -280,9 +280,11 @@ async function generatePanel() {
   `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
 
   `📅 **LAST 5 DAYS**\n${gp.historyText}`
-(
- ];
+     )
+  ];
 }
+
+
 
 // 🚀 START
 client.once('ready', async () => {
