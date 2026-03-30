@@ -244,7 +244,7 @@ async function generatePanel() {
 
   return [
     new EmbedBuilder()
-      .setTitle("🐉 Dragon Reroll Dashboard")
+      .setTitle("Elite Four Statistics")
       .setColor(0x5865F2)
       .addFields(
         { name: "🟢 ACTIVE", value: onlineList.join("\n\n") || "-" },
@@ -254,21 +254,21 @@ async function generatePanel() {
     new EmbedBuilder()
       .setTitle("📊 Global Stats")
       .setColor(0xF1C40F)
-    .setDescription(
+  .setDescription(
   `⚡ PPM\n` +
   `# **${global.totalPPM}**\n` +
-  `📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
+  `📉 12h Avg: **${cachedAvgPPM}**\n\n` +
 
-  `👥 Usuarios activos: **${global.users}**\n` +
-  `📦 Packs totales: **${global.totalPacks}**\n` +
-  `⚡ Avg PPM/user: **${global.avgPPM}**\n\n` +
+  `👥 Active Users: **${global.users}**\n` +
+  `📦 Total Packs: **${global.totalPacks}**\n` +
+  `⚡ Avg PPM/User: **${global.avgPPM}**\n\n` +
 
-  `🔥 Instancias totales: **${global.totalInstances}**\n` +
-  `📊 Avg instancias: **${global.avgInstances}**\n\n` +
+  `🔥 Total Instances: **${global.totalInstances}**\n` +
+  `📊 Avg Instances: **${global.avgInstances}**\n\n` +
 
-  `🎯 Predicción GP:\n` +
+  `🎯 GP Prediction:\n` +
   `⏱ ${global.minutesToGP} min / GP\n` +
-  `🚀 ${global.gpPerHour} GP/h\n\n` +
+  `🚀 ${global.gpPerHour} GP/hour\n\n` +
 
   `━━━━━━━━━━━━━━\n\n` +
 
