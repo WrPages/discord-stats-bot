@@ -52,13 +52,13 @@ function cleanList(str) {
     );
 }
 
-// 🎨 FORMATO BONITO LISTAS
+// 🎨 FORMATO LISTAS
 function formatList(arr) {
   if (!arr || arr.length === 0) return "-";
   return arr.join(" • ");
 }
 
-// 🧠 PARSE STATS
+// 🧠 PARSE
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
@@ -73,7 +73,7 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 DETECTAR MENSAJE
+// 🔍 DETECCIÓN
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
 
@@ -83,7 +83,7 @@ function findLastUserMessage(messages, username) {
   });
 }
 
-// 📥 OBTENER 500 MENSAJES
+// 📥 500 MENSAJES
 async function fetchLastMessages(channel) {
   let all = [];
   let lastId = null;
@@ -102,7 +102,7 @@ async function fetchLastMessages(channel) {
   return all;
 }
 
-// 📊 GENERAR PANEL
+// 📊 PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -126,7 +126,7 @@ async function generatePanel() {
       const stats = parseStats(msg.content);
 
       if (isOnline) {
-        // 🟢 ONLINE
+        // 🟢 ONLINE (SIN CAMBIOS)
         onlineList.push(
           `⚔️ **__${user.name}__**\n` +
           `⚡ **PPM:** ${stats.ppm} | 📦 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
@@ -135,13 +135,9 @@ async function generatePanel() {
         );
 
       } else {
-        // 💤 OFFLINE
-        const all = [...stats.online, ...stats.offline];
-
+        // 💤 OFFLINE (COMPACTO)
         offlineList.push(
-          `💤 **__${user.name}__**\n` +
-          `📦 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
-          `💤 ${formatList(all)}`
+          `💤 **__${user.name}__** | 📦 ${stats.packs} | ⏱ ${stats.time}`
         );
       }
 
@@ -162,7 +158,7 @@ async function generatePanel() {
       },
       {
         name: `🔴 **INACTIVE USERS (${offlineList.length})**`,
-        value: offlineList.join("\n\n") || "No inactive users"
+        value: offlineList.join("\n") || "No inactive users"
       }
     )
     .setTimestamp();
