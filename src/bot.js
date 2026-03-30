@@ -260,7 +260,7 @@ async function generatePanel() {
   `📉 12h Avg: **${cachedAvgPPM}**\n\n` +
 
   `👥 Active Users: **${global.users}**\n` +
-  `📦 Total Packs: **${global.totalPacks}**\n` +
+  `🧧 Packs/12h: **${global.totalPacks}**\n` +
   `⚡ Avg PPM/User: **${global.avgPPM}**\n\n` +
 
   `🔥 Total Instances: **${global.totalInstances}**\n` +
@@ -276,7 +276,7 @@ async function generatePanel() {
   `# **${gp.todayGP}**\n` +
   `💖 ${gp.todayAlive}\n\n` +
 
-  `📊 **TOTAL GP (GLOBAL)**\n` +
+  `📊 ** GP average **\n` +
   `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
 
   `📅 **LAST 5 DAYS**\n${gp.historyText}`
