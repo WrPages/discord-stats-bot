@@ -27,6 +27,7 @@ const client = new Client({
 
 let panelMessage = null;
 let lastTotalPPM = 0;
+let cachedAvgPPM = "0.00"; // 🔥 NUEVO
 
 // 📥 FETCH
 async function fetchJSON(url) {
@@ -58,8 +59,19 @@ async function getPPMHistory() {
   }
 }
 
-// 🧠 GIST WRITE
-async function savePPMHistory(data) {
+// 💾 GUARDAR PPM
+async function storePPM(value) {
+  const data = await getPPMHistory();
+
+  data.history.push({
+    timestamp: Date.now(),
+    ppm: Number(value)
+  });
+
+  if (data.history.length > 24) {
+    data.history = data.history.slice(-24);
+  }
+
   await axios.patch(
     `https://api.github.com/gists/${ppmGistId}`,
     {
@@ -77,40 +89,34 @@ async function savePPMHistory(data) {
   );
 }
 
-// 💾 GUARDAR PPM
-async function storePPM(value) {
-  const data = await getPPMHistory();
+// 📊 CALCULAR AVG (USADO CADA 5 MIN)
+async function refreshAveragePPM() {
+  try {
+    const data = await getPPMHistory();
 
-  data.history.push({
-    timestamp: Date.now(),
-    ppm: Number(value)
-  });
+    const values = data.history
+      .map(x => Number(x.ppm))
+      .filter(x => !isNaN(x) && x > 0);
 
-  if (data.history.length > 24) {
-    data.history = data.history.slice(-24);
+    if (!values.length) {
+      cachedAvgPPM = "0.00";
+      return;
+    }
+
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    cachedAvgPPM = avg.toFixed(2);
+
+    console.log("📊 Avg actualizado:", cachedAvgPPM);
+
+  } catch (e) {
+    console.error("❌ Avg error:", e);
   }
-
-  await savePPMHistory(data);
-}
-
-// 📊 MEDIA
-async function getAveragePPM() {
-  const data = await getPPMHistory();
-
-  const values = data.history
-    .map(x => Number(x.ppm))
-    .filter(x => !isNaN(x) && x > 0);
-
-  if (!values.length) return "0.00";
-
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  return avg.toFixed(2);
 }
 
 // 🧠 HELPERS
 function cleanList(str) {
   if (!str) return [];
-  return str.split(",").map(x => x.trim()).filter(x => x && x !== "-");
+  return str.split(",").map(x => x.trim()).filter(Boolean);
 }
 
 function formatList(arr) {
@@ -151,7 +157,7 @@ async function fetchMessagesByHours(channel, hours) {
   }
 }
 
-// 📊 GLOBAL STATS
+// 📊 GLOBAL
 function calculateGlobalStats(onlineStats) {
   let totalPPM = 0;
   let totalInstances = 0;
@@ -167,22 +173,16 @@ function calculateGlobalStats(onlineStats) {
 
   const users = onlineStats.length;
 
-  const avgPPM = users ? totalPPM / users : 0;
-  const avgInstances = users ? totalInstances / users : 0;
-
-  const expectedPacks = 2000;
-  const minutesToGP = totalPPM > 0 ? expectedPacks / totalPPM : 0;
-
   return {
     totalPPM: totalPPM.toFixed(2),
-    avgPPM: avgPPM.toFixed(2),
+    avgPPM: (users ? totalPPM / users : 0).toFixed(2),
     totalInstances,
-    avgInstances: Math.round(avgInstances),
+    avgInstances: Math.round(users ? totalInstances / users : 0),
     totalPacks,
-    ppmPerInstance: totalInstances > 0 ? (totalPPM / totalInstances).toFixed(2) : "0.00",
+    ppmPerInstance: totalInstances ? (totalPPM / totalInstances).toFixed(2) : "0.00",
     users,
-    minutesToGP: minutesToGP.toFixed(1),
-    gpPerHour: totalPPM > 0 ? (60 / minutesToGP).toFixed(2) : "0.00"
+    minutesToGP: totalPPM ? (2000 / totalPPM).toFixed(1) : "0",
+    gpPerHour: totalPPM ? (60 / (2000 / totalPPM)).toFixed(2) : "0.00"
   };
 }
 
@@ -227,7 +227,6 @@ async function generatePanel() {
   }
 
   const global = calculateGlobalStats(onlineStats);
-  const avg12h = await getAveragePPM();
 
   return [
     new EmbedBuilder()
@@ -242,15 +241,15 @@ async function generatePanel() {
       .setTitle("📊 Global Stats")
       .setColor(0xF1C40F)
       .setDescription(
-        `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${avg12h}**\n\n` +
+        `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
 
-        `📦 Packs total: ${global.totalPacks}\n` +
-        `⚡ Avg PPM/user: ${global.avgPPM}\n` +
-        `🔥 Instancias totales: ${global.totalInstances}\n` +
-        `📊 PPM por instancia: ${global.ppmPerInstance}\n\n` +
+        `📦 Packs: ${global.totalPacks}\n` +
+        `⚡ Avg/user: ${global.avgPPM}\n` +
+        `🔥 Instancias: ${global.totalInstances}\n` +
+        `📊 PPM/inst: ${global.ppmPerInstance}\n\n` +
 
-        `👥 ${global.users} rerollers\n` +
-        `📈 Avg instancias: ${global.avgInstances}\n\n` +
+        `👥 ${global.users} users\n` +
+        `📈 Avg inst: ${global.avgInstances}\n\n` +
 
         `🎯 ${global.minutesToGP} min / GP\n` +
         `🚀 ${global.gpPerHour} GP/h`
@@ -264,32 +263,26 @@ client.once('ready', async () => {
 
   const channel = await client.channels.fetch(panelChannelId);
 
+  // 🔥 INIT AVG
+  await refreshAveragePPM();
+
   const embeds = await generatePanel();
   panelMessage = await channel.send({ embeds });
 
-  // 🔥 GUARDADO INMEDIATO
+  // 💾 PRIMER GUARDADO
   await storePPM(lastTotalPPM);
-  console.log("💾 Initial PPM saved:", lastTotalPPM);
 
   // 🔄 PANEL
   setInterval(async () => {
-    try {
-      const embeds = await generatePanel();
-      await panelMessage.edit({ embeds });
-    } catch (e) {
-      console.error("❌ Panel error:", e);
-    }
+    const embeds = await generatePanel();
+    await panelMessage.edit({ embeds });
   }, 300000);
 
-  // 💾 CADA 30 MIN
-  setInterval(async () => {
-    try {
-      await storePPM(lastTotalPPM);
-      console.log("💾 PPM saved:", lastTotalPPM);
-    } catch (e) {
-      console.error("❌ Save error:", e);
-    }
-  }, 1800000);
+  // 🔄 ACTUALIZAR AVG CADA 5 MIN
+  setInterval(refreshAveragePPM, 300000);
+
+  // 💾 GUARDAR CADA 30 MIN
+  setInterval(() => storePPM(lastTotalPPM), 1800000);
 });
 
 client.login(TOKEN);
