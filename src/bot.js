@@ -98,7 +98,7 @@ async function fetchMessagesByHours(channel, hours) {
   }
 }
 
-// 📊 GLOBAL STATS (OPTIMIZADO)
+// 📊 GLOBAL STATS (ACTUALIZADO)
 function calculateGlobalStats(onlineStats, messages12h) {
   let totalPPM = 0;
   let totalInstances = 0;
@@ -132,8 +132,9 @@ function calculateGlobalStats(onlineStats, messages12h) {
   const avgPPM = activeUsers > 0 ? totalPPM / activeUsers : 0;
   const avgInstances = activeUsers > 0 ? totalInstances / activeUsers : 0;
 
+  // 🔥 NUEVO RATIO GP (1 / 2000)
   const rate = 0.0005;
-  const expectedPacks = 1 / rate;
+  const expectedPacks = 2000;
 
   const minutesToGP = totalPPM > 0 ? expectedPacks / totalPPM : 0;
   const gpPerHour = totalPPM > 0 ? (60 / minutesToGP) : 0;
@@ -147,7 +148,7 @@ function calculateGlobalStats(onlineStats, messages12h) {
     totalInstances,
     activeUsers,
     avgPPM: avgPPM.toFixed(2),
-    avgInstances: avgInstances.toFixed(1),
+    avgInstances: Math.round(avgInstances), // 👈 ENTERO
     minutesToGP: minutesToGP.toFixed(1),
     gpPerHour: gpPerHour.toFixed(2),
     packsPerMinute: packsPerMinute.toFixed(2),
