@@ -1,4 +1,4 @@
-module.exports = {
+mmodule.exports = {
   token: process.env.LATIOS_TOKEN,
   clientId: process.env.LATIOS_ID,
   guildId: process.env.GUILD_ID,
