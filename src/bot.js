@@ -331,8 +331,23 @@ client.once('ready', async () => {
 
   await refreshAveragePPM();
 
-  const embeds = await generatePanel();
+const embeds = await generatePanel();
+
+try {
+  // 🔥 intentar obtener mensaje existente
+  panelMessage = await channel.messages.fetch(PANEL_MESSAGE_ID);
+
+  // editar si existe
+  await panelMessage.edit({ embeds });
+
+} catch (err) {
+  console.log("⚠️ Panel no encontrado, creando nuevo...");
+
+  // crear si no existe
   panelMessage = await channel.send({ embeds });
+
+  console.log("📌 Nuevo panel ID:", panelMessage.id);
+}
 
   await storePPM(lastTotalPPM);
 
