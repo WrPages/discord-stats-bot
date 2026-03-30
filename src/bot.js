@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
-// 🔐 TOKEN (Railway)
+// 🔐 TOKEN
 const TOKEN = process.env.LATIOS_TOKEN;
 
 if (!TOKEN) {
@@ -9,7 +9,7 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-// 📊 CONFIG (en código)
+// 📊 CONFIG
 const statsUrl = "https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json";
 const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496fd6cc830f9ca6e9/raw/elite_ids.txt";
 
@@ -23,13 +23,12 @@ const client = new Client({
 
 let panelMessage = null;
 
-// 📥 FETCH JSON
+// 📥 FETCH
 async function fetchJSON(url) {
   const res = await axios.get(url);
   return res.data;
 }
 
-// 📥 FETCH TXT (IDs online)
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data
@@ -38,53 +37,66 @@ async function fetchOnlineIDs(url) {
     .filter(Boolean);
 }
 
-// 🧠 PARSE STATS DEL MENSAJE
+// 🧠 LIMPIAR LISTAS
+function cleanList(str) {
+  if (!str) return [];
+
+  return str
+    .split(",")
+    .map(x => x.trim())
+    .filter(x =>
+      x &&
+      x !== "-" &&
+      x.toLowerCase() !== "none" &&
+      x.toLowerCase() !== "null"
+    );
+}
+
+// 🧠 PARSE
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
   const ppm = content.match(/Avg:\s([\d.]+)/)?.[1] || "0";
 
-  const online = content.match(/Online:\s(.+)/)?.[1] || "-";
-  const offline = content.match(/Offline:\s(.+)/)?.[1] || "-";
+  const onlineRaw = content.match(/Online:\s(.+)/)?.[1];
+  const offlineRaw = content.match(/Offline:\s(.+)/)?.[1];
+
+  const online = cleanList(onlineRaw);
+  const offline = cleanList(offlineRaw);
 
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 BUSCAR ÚLTIMO MENSAJE DE USUARIO
+// 🔍 DETECCIÓN
 function findLastUserMessage(messages, username) {
-  const lowerName = username.toLowerCase();
+  const name = username.toLowerCase();
 
   return messages.find(msg => {
-    const content = msg.content.toLowerCase();
-
-    return (
-      content.startsWith(lowerName) ||
-      content.includes(`\n${lowerName}`) ||
-      content.includes(lowerName)
-    );
+    const c = msg.content.toLowerCase();
+    return c.startsWith(name) || c.includes(`\n${name}`) || c.includes(name);
   });
 }
 
-// 📥 OBTENER HASTA 500 MENSAJES
+// 📥 500 MENSAJES
 async function fetchLastMessages(channel) {
-  let allMessages = [];
+  let all = [];
   let lastId = null;
 
-  while (allMessages.length < 500) {
+  while (all.length < 500) {
     const options = { limit: 100 };
     if (lastId) options.before = lastId;
 
-    const messages = await channel.messages.fetch(options);
-    if (!messages.size) break;
+    const msgs = await channel.messages.fetch(options);
+    if (!msgs.size) break;
 
-    allMessages.push(...messages.values());
-    lastId = messages.last().id;
+    all.push(...msgs.values());
+    lastId = msgs.last().id;
   }
 
-  return allMessages;
+  return all;
 }
 
-// 📊 GENERAR PANEL
+// 📊 PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -108,66 +120,67 @@ async function generatePanel() {
       const stats = parseStats(msg.content);
 
       if (isOnline) {
-        // 🟢 ONLINE → FULL DATA
         onlineList.push(
           `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `🔥 ${stats.online}\n` +
-          `💤 ${stats.offline}`
+          `🔥 ${stats.online.join(",") || "-"}\n` +
+          `💤 ${stats.offline.join(",") || "-"}`
         );
 
       } else {
-        // 💤 OFFLINE → SOLO PACKS + TIME + TODO COMO INACTIVO
-
-        let allInstances = [];
-
-        if (stats.online && stats.online !== "-") {
-          allInstances.push(...stats.online.split(","));
-        }
-
-        if (stats.offline && stats.offline !== "-") {
-          allInstances.push(...stats.offline.split(","));
-        }
-
-        allInstances = allInstances.map(x => x.trim()).filter(Boolean);
-
-        const allOffline = allInstances.length > 0
-          ? allInstances.join(",")
-          : "-";
+        // 💤 OFFLINE → TODO COMO INACTIVO
+        const all = [...stats.online, ...stats.offline];
 
         offlineList.push(
           `💤 **${user.name}** | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `💤 ${allOffline}`
+          `💤 ${all.join(",") || "-"}`
         );
       }
 
     } else {
       const noData = `💤 **${user.name}** | No data`;
 
-      if (isOnline) {
-        onlineList.push(noData);
-      } else {
-        offlineList.push(noData);
-      }
+      isOnline ? onlineList.push(noData) : offlineList.push(noData);
     }
   }
+
+  // 🧩 dividir listas (para ancho)
+  function chunkArray(arr, size) {
+    let result = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  }
+
+  const onlineChunks = chunkArray(onlineList, 5);
+  const offlineChunks = chunkArray(offlineList, 5);
+
+  const fields = [];
+
+  onlineChunks.forEach((chunk, i) => {
+    fields.push({
+      name: i === 0 ? `🟢 **ACTIVE USERS (${onlineList.length})**` : "‎",
+      value: chunk.join("\n\n"),
+      inline: true
+    });
+  });
+
+  offlineChunks.forEach((chunk, i) => {
+    fields.push({
+      name: i === 0 ? `🔴 **INACTIVE USERS (${offlineList.length})**` : "‎",
+      value: chunk.join("\n\n"),
+      inline: true
+    });
+  });
 
   return new EmbedBuilder()
     .setTitle("🐉 Dragon Reroll Dashboard")
     .setColor(0x5865F2)
-    .addFields(
-      {
-        name: `🟢 **ACTIVE USERS (${onlineList.length})**`,
-        value: onlineList.join("\n\n") || "No active users"
-      },
-      {
-        name: `🔴 **INACTIVE USERS (${offlineList.length})**`,
-        value: offlineList.join("\n\n") || "No inactive users"
-      }
-    )
+    .addFields(fields)
     .setTimestamp();
 }
 
-// 🚀 INICIO
+// 🚀 READY
 client.once('ready', async () => {
   console.log(`✅ Bot ready: ${client.user.tag}`);
 
@@ -176,7 +189,6 @@ client.once('ready', async () => {
   const embed = await generatePanel();
   panelMessage = await panelChannel.send({ embeds: [embed] });
 
-  // 🔁 ACTUALIZAR CADA 5 MINUTOS
   setInterval(async () => {
     try {
       const newEmbed = await generatePanel();
