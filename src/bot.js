@@ -340,7 +340,7 @@ client.once('ready', async () => {
     msg =>
       msg.author.id === client.user.id &&
       msg.embeds.length > 0 &&
-      msg.embeds[0].title === "📊 Global Stats"
+msg.embeds.some(e => e.title === "📊 Global Stats")
   );
 
   if (panelMessage) {
