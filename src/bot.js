@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
-// 🔐 TOKEN (Railway)
+// 🔐 TOKEN
 const TOKEN = process.env.LATIOS_TOKEN;
 
 if (!TOKEN) {
@@ -29,7 +29,7 @@ async function fetchJSON(url) {
   return res.data;
 }
 
-// 📥 FETCH TXT → ARRAY
+// 📥 FETCH TXT
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data
@@ -44,22 +44,10 @@ function parseStats(content) {
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
   const ppm = content.match(/Avg:\s([\d.]+)/)?.[1] || "0";
 
-  // 👇 Detect instances
-  const onlineMatch = content.match(/Online:\s([\d,\s]+)/);
-  const offlineMatch = content.match(/Offline:\s([\d,\s]+)/);
+  const online = content.match(/Online:\s(.+)/)?.[1] || "-";
+  const offline = content.match(/Offline:\s(.+)/)?.[1] || "-";
 
-  const onlineList = onlineMatch
-    ? onlineMatch[1].split(",").map(x => x.trim()).filter(Boolean)
-    : [];
-
-  const offlineList = offlineMatch
-    ? offlineMatch[1].split(",").map(x => x.trim()).filter(Boolean)
-    : [];
-
-  const active = onlineList.length;
-  const total = onlineList.length + offlineList.length;
-
-  return { time, packs, ppm, active, total };
+  return { time, packs, ppm, online, offline };
 }
 
 // 🔍 FIND MESSAGE
@@ -67,7 +55,7 @@ function findUserMessage(messages, username) {
   return messages.find(m => m.content.startsWith(username));
 }
 
-// 📊 GENERATE PANEL
+// 📊 PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
@@ -92,14 +80,16 @@ async function generatePanel() {
         const stats = parseStats(msg.content);
 
         onlineList.push(
-          `🟢 **${user.name}** | ⚡ ${stats.ppm} ppm | 📦 ${stats.packs} | ⏱ ${stats.time} | 🖥 ${stats.active}/${stats.total}`
+          `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
+          `🔥 Online: ${stats.online}\n` +
+          `💤 Offline: ${stats.offline}`
         );
       } else {
-        onlineList.push(`🟢 **${user.name}** | no data`);
+        onlineList.push(`⚔️ **${user.name}** | No data`);
       }
 
     } else {
-      offlineList.push(`🔴 ${user.name}`);
+      offlineList.push(`💀 ${user.name}`);
     }
   }
 
@@ -108,12 +98,12 @@ async function generatePanel() {
     .setColor(0x5865F2)
     .addFields(
       {
-        name: `🟢 Online (${onlineList.length})`,
-        value: onlineList.join("\n") || "No users online"
+        name: `🔥 Active (${onlineList.length})`,
+        value: onlineList.join("\n\n") || "No active users"
       },
       {
-        name: `🔴 Offline (${offlineList.length})`,
-        value: offlineList.join("\n") || "No users offline"
+        name: `💤 Inactive (${offlineList.length})`,
+        value: offlineList.join("\n") || "No inactive users"
       }
     )
     .setTimestamp();
