@@ -50,9 +50,19 @@ function parseStats(content) {
   return { time, packs, ppm, online, offline };
 }
 
-// 🔍 FIND MESSAGE
+// 🔍 DETECCIÓN MEJORADA
 function findUserMessage(messages, username) {
-  return messages.find(m => m.content.startsWith(username));
+  const lowerName = username.toLowerCase();
+
+  return messages.find(msg => {
+    const content = msg.content.toLowerCase();
+
+    return (
+      content.startsWith(lowerName) || // caso ideal
+      content.includes(`\n${lowerName}`) || // nombre en nueva línea
+      content.includes(lowerName) // fallback (más flexible)
+    );
+  });
 }
 
 // 📊 PANEL
@@ -61,7 +71,7 @@ async function generatePanel() {
   const onlineIDs = await fetchOnlineIDs(onlineUrl);
 
   const channel = await client.channels.fetch(heartbeatChannelId);
-  const messages = await channel.messages.fetch({ limit: 30 });
+  const messages = await channel.messages.fetch({ limit: 50 }); // 👈 más mensajes
 
   let onlineList = [];
   let offlineList = [];
@@ -81,28 +91,28 @@ async function generatePanel() {
 
         onlineList.push(
           `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `🔥 Online: ${stats.online}\n` +
-          `💤 Offline: ${stats.offline}`
+          `🔥 ${stats.online}\n` +
+          `💤 ${stats.offline}`
         );
       } else {
         onlineList.push(`⚔️ **${user.name}** | No data`);
       }
 
     } else {
-      offlineList.push(`💀 ${user.name}`);
+      offlineList.push(`💤 ${user.name}`);
     }
   }
 
   return new EmbedBuilder()
-    .setTitle("🐉 Dragon Stats Panel")
+    .setTitle("🐉 Dragon Reroll Dashboard")
     .setColor(0x5865F2)
     .addFields(
       {
-        name: `🔥 Active (${onlineList.length})`,
+        name: `🟢 **ACTIVE USERS (${onlineList.length})**`,
         value: onlineList.join("\n\n") || "No active users"
       },
       {
-        name: `💤 Inactive (${offlineList.length})`,
+        name: `🔴 **INACTIVE USERS (${offlineList.length})**`,
         value: offlineList.join("\n") || "No inactive users"
       }
     )
