@@ -111,10 +111,10 @@ async function refreshAveragePPM() {
 // 🧠 GP
 async function getGPStats() {
   try {
-    const data = await fetchJSON(gpUrl);
+const data = await fetchJSON(`${gpUrl}?t=${Date.now()}`);
 
     const todayGP = data.daily?.gp || 0;
-    const todayAlive = data.daily?.alive || 0;
+const todayAlive = data.daily?.alive || 0;
 
     const history = data.history || [];
 
