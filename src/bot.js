@@ -17,7 +17,6 @@ const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496f
 const ppmGistId = "fb7dd70fceaa1743943e67176352ffbd";
 const ppmFileName = "ppm.json";
 
-// 🆕 GP GIST
 const gpUrl = "https://gist.githubusercontent.com/WrPages/4773653072f4851e91958a333e503de9/raw/gp_live_stats.json";
 
 const heartbeatChannelId = "1483616146996465735";
@@ -89,7 +88,7 @@ async function refreshAveragePPM() {
   cachedAvgPPM = avg.toFixed(2);
 }
 
-// 🧠 GP STATS
+// 🧠 GP
 async function getGPStats() {
   try {
     const data = await fetchJSON(gpUrl);
@@ -101,7 +100,6 @@ async function getGPStats() {
     const totalAlive = data.totalAlive || 0;
 
     const history = data.history || [];
-
     const last5 = history.slice(-5);
 
     const historyText = last5.map(d => {
@@ -256,24 +254,26 @@ async function generatePanel() {
     new EmbedBuilder()
       .setTitle("📊 Global Stats")
       .setColor(0xF1C40F)
-      .addFields(
-        {
-          name: "⚡ GLOBAL",
-          value:
-            `# **${global.totalPPM}**\n📉 Avg 12h: ${cachedAvgPPM}\n\n` +
-            `📦 ${global.totalPacks} packs\n🔥 ${global.totalInstances} inst\n` +
-            `⚡ ${global.avgPPM} avg\n📊 ${global.ppmPerInstance} ppm/inst`,
-          inline: true
-        },
-        {
-          name: "🎯 GP",
-          value:
-            `# **${gp.todayGP}**\n💖 **${gp.todayAlive}**\n` +
-            `Daily\n\n` +
-            `📊 Avg 5d: ${gp.totalGP} / ${gp.totalAlive}\n\n` +
-            `📅\n${gp.historyText}`,
-          inline: true
-        }
+      .setDescription(
+        `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
+
+        `📦 Packs: ${global.totalPacks}\n` +
+        `⚡ Avg/user: ${global.avgPPM}\n` +
+        `🔥 Instancias: ${global.totalInstances}\n` +
+        `📊 PPM/inst: ${global.ppmPerInstance}\n\n` +
+
+        `🎯 ${global.minutesToGP} min / GP\n` +
+        `🚀 ${global.gpPerHour} GP/h\n\n` +
+
+        `━━━━━━━━━━━━━━\n` +
+
+        `🎯 **TODAY GP**\n` +
+        `# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
+
+        `📊 **TOTAL GP (GLOBAL)**\n` +
+        `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+
+        `📅 **LAST 5 DAYS**\n${gp.historyText}`
       )
   ];
 }
