@@ -116,17 +116,31 @@ async function getGPStats() {
     const todayGP = data.daily?.gp || 0;
     const todayAlive = data.daily?.alive || 0;
 
-    const totalGP = data.totalGP || 0;
-    const totalAlive = data.totalAlive || 0;
-
     const history = data.history || [];
-    const last5 = history.slice(-5);
 
-    const historyText = last5.map(d => {
-      const date = new Date(d.date);
-      const formatted = `${(date.getMonth()+1).toString().padStart(2,"0")}/${date.getDate().toString().padStart(2,"0")}`;
-      return `📅 ${formatted} → ${d.gp} (${d.alive})`;
-    }).join("\n");
+    // 🔥 CALCULAR TOTALES DINÁMICOS
+    let totalGP = todayGP;
+    let totalAlive = todayAlive;
+
+    for (const day of history) {
+      totalGP += day.gp || 0;
+      totalAlive += day.alive || 0;
+    }
+
+    // 🔥 FORMATO DE FECHA
+    const formatDate = (dateStr) => {
+      const date = new Date(dateStr);
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${m}/${d}`;
+    };
+
+    // 🔥 ÚLTIMOS 5 DÍAS (orden correcto)
+    const last5 = history.slice(0, 5);
+
+    const historyText = last5.map(d =>
+      `${formatDate(d.date)} → ${d.gp} GP | 💖 ${d.alive}`
+    ).join("\n");
 
     return {
       todayGP,
@@ -136,7 +150,8 @@ async function getGPStats() {
       historyText: historyText || "No data"
     };
 
-  } catch {
+  } catch (err) {
+    console.error("GP ERROR:", err);
     return {
       todayGP: 0,
       todayAlive: 0,
@@ -296,10 +311,14 @@ async function generatePanel() {
   `# **${gp.todayGP}**\n` +
   `💖 ${gp.todayAlive}\n\n` +
 
-  `📊 **TOTAL GP (GLOBAL)**\n` +
-  `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+`🎯 **TODAY GP**\n` +
+`# **${gp.todayGP}**\n` +
+`💖 ${gp.todayAlive}\n\n` +
 
-  `📅 **LAST 5 DAYS**\n${gp.historyText}`
+`📊 **TOTAL GP (GLOBAL)**\n` +
+`${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+
+`📅 **LAST 5 DAYS**\n${gp.historyText}`
 
 
      )
