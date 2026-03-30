@@ -39,27 +39,21 @@ async function fetchOnlineIDs(url) {
   return res.data.split("\n").map(x => x.trim()).filter(Boolean);
 }
 
-// 🧠 GIST READ (FIXED)
+// 🧠 GIST READ
 async function getPPMHistory() {
   try {
     const res = await axios.get(`https://api.github.com/gists/${ppmGistId}`);
-
     const file = res.data.files[ppmFileName];
 
-    if (!file || !file.content) {
-      return { history: [] };
-    }
+    if (!file || !file.content) return { history: [] };
 
     const parsed = JSON.parse(file.content);
-
     if (!parsed.history || !Array.isArray(parsed.history)) {
       return { history: [] };
     }
 
     return parsed;
-
-  } catch (e) {
-    console.log("⚠️ Gist vacío o inválido, creando nuevo...");
+  } catch {
     return { history: [] };
   }
 }
@@ -99,13 +93,9 @@ async function storePPM(value) {
   await savePPMHistory(data);
 }
 
-// 📊 MEDIA (FIXED)
+// 📊 MEDIA
 async function getAveragePPM() {
   const data = await getPPMHistory();
-
-  if (!data.history || !Array.isArray(data.history)) {
-    return "0.00";
-  }
 
   const values = data.history
     .map(x => Number(x.ppm))
@@ -120,9 +110,7 @@ async function getAveragePPM() {
 // 🧠 HELPERS
 function cleanList(str) {
   if (!str) return [];
-  return str.split(",")
-    .map(x => x.trim())
-    .filter(x => x && x !== "-" && x.toLowerCase() !== "none");
+  return str.split(",").map(x => x.trim()).filter(x => x && x !== "-");
 }
 
 function formatList(arr) {
@@ -132,8 +120,8 @@ function formatList(arr) {
 function parseStats(content) {
   return {
     time: content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0",
-    packs: content.match(/Packs:\s(\d+)/)?.[1] || "0",
-    ppm: content.match(/Avg:\s([\d.]+)/)?.[1] || "0",
+    packs: Number(content.match(/Packs:\s(\d+)/)?.[1] || 0),
+    ppm: Number(content.match(/Avg:\s([\d.]+)/)?.[1] || 0),
     online: cleanList(content.match(/Online:\s(.+)/)?.[1]),
     offline: cleanList(content.match(/Offline:\s(.+)/)?.[1])
   };
@@ -163,27 +151,36 @@ async function fetchMessagesByHours(channel, hours) {
   }
 }
 
-// 📊 GLOBAL
+// 📊 GLOBAL STATS
 function calculateGlobalStats(onlineStats) {
   let totalPPM = 0;
   let totalInstances = 0;
+  let totalPacks = 0;
 
   for (const s of onlineStats) {
-    totalPPM += Number(s.ppm);
+    totalPPM += s.ppm;
     totalInstances += s.online.filter(x => x !== "1").length;
+    totalPacks += s.packs;
   }
 
   lastTotalPPM = totalPPM;
 
   const users = onlineStats.length;
 
+  const avgPPM = users ? totalPPM / users : 0;
+  const avgInstances = users ? totalInstances / users : 0;
+
   const expectedPacks = 2000;
   const minutesToGP = totalPPM > 0 ? expectedPacks / totalPPM : 0;
 
   return {
     totalPPM: totalPPM.toFixed(2),
+    avgPPM: avgPPM.toFixed(2),
+    totalInstances,
+    avgInstances: Math.round(avgInstances),
+    totalPacks,
+    ppmPerInstance: totalInstances > 0 ? (totalPPM / totalInstances).toFixed(2) : "0.00",
     users,
-    avgInstances: Math.round(users ? totalInstances / users : 0),
     minutesToGP: minutesToGP.toFixed(1),
     gpPerHour: totalPPM > 0 ? (60 / minutesToGP).toFixed(2) : "0.00"
   };
@@ -246,8 +243,17 @@ async function generatePanel() {
       .setColor(0xF1C40F)
       .setDescription(
         `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${avg12h}**\n\n` +
-        `👥 ${global.users} users\n🔥 Avg inst: ${global.avgInstances}\n\n` +
-        `🎯 ${global.minutesToGP} min / GP\n🚀 ${global.gpPerHour} GP/h`
+
+        `📦 Packs total: ${global.totalPacks}\n` +
+        `⚡ Avg PPM/user: ${global.avgPPM}\n` +
+        `🔥 Instancias totales: ${global.totalInstances}\n` +
+        `📊 PPM por instancia: ${global.ppmPerInstance}\n\n` +
+
+        `👥 ${global.users} rerollers\n` +
+        `📈 Avg instancias: ${global.avgInstances}\n\n` +
+
+        `🎯 ${global.minutesToGP} min / GP\n` +
+        `🚀 ${global.gpPerHour} GP/h`
       )
   ];
 }
@@ -257,8 +263,15 @@ client.once('ready', async () => {
   console.log(`✅ Ready: ${client.user.tag}`);
 
   const channel = await client.channels.fetch(panelChannelId);
-  panelMessage = await channel.send({ embeds: await generatePanel() });
 
+  const embeds = await generatePanel();
+  panelMessage = await channel.send({ embeds });
+
+  // 🔥 GUARDADO INMEDIATO
+  await storePPM(lastTotalPPM);
+  console.log("💾 Initial PPM saved:", lastTotalPPM);
+
+  // 🔄 PANEL
   setInterval(async () => {
     try {
       const embeds = await generatePanel();
@@ -268,6 +281,7 @@ client.once('ready', async () => {
     }
   }, 300000);
 
+  // 💾 CADA 30 MIN
   setInterval(async () => {
     try {
       await storePPM(lastTotalPPM);
