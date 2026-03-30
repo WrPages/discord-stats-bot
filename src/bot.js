@@ -276,12 +276,12 @@ async function generatePanel() {
   `# **${gp.todayGP}**\n` +
   `💖 ${gp.todayAlive}\n\n` +
 
-  //`📊 ** GP average **\n` +
- // `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+  `📊 ** GP average **\n` +
+  `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
 
-  //`📅 **LAST 5 DAYS**\n${gp.historyText}`
-//(
- // ];
+  `📅 **LAST 5 DAYS**\n${gp.historyText}`
+(
+ ];
 }
 
 // 🚀 START
