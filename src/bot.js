@@ -1,24 +1,22 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
-// 🔐 VARIABLES (solo estas desde Railway)
+// 🔐 TOKEN (Railway)
 const TOKEN = process.env.LATIOS_TOKEN;
 
-// 📊 CONFIG EN CÓDIGO
-const CONFIG = {
-  statsUrl: "https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json",
-  onlineUrl: "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496fd6cc830f9ca6e9/raw/elite_ids.txt",
-  heartbeatChannelId: "1483616146996465735",
-  panelChannelId: "1484015417411244082"
-};
-
-// 🚫 VALIDACIÓN
 if (!TOKEN) {
-  console.error("❌ Falta LATIOS_TOKEN");
+  console.error("❌ Missing LATIOS_TOKEN");
   process.exit(1);
 }
 
-// 🤖 CLIENTE
+// 📊 CONFIG
+const statsUrl = "https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json";
+const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496fd6cc830f9ca6e9/raw/elite_ids.txt";
+
+const heartbeatChannelId = "1483616146996465735";
+const panelChannelId = "1484015417411244082";
+
+// 🤖 CLIENT
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
@@ -31,7 +29,7 @@ async function fetchJSON(url) {
   return res.data;
 }
 
-// 📥 FETCH TXT (online IDs)
+// 📥 FETCH TXT → ARRAY
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data
@@ -40,28 +38,41 @@ async function fetchOnlineIDs(url) {
     .filter(Boolean);
 }
 
-// 🧠 PARSEAR MENSAJE
+// 🧠 PARSE STATS
 function parseStats(content) {
   const time = content.match(/Time:\s(.+?)\sPacks:/)?.[1] || "0";
   const packs = content.match(/Packs:\s(\d+)/)?.[1] || "0";
   const ppm = content.match(/Avg:\s([\d.]+)/)?.[1] || "0";
-  const online = content.match(/Online:\s(.+)/)?.[1] || "0";
-  const offline = content.match(/Offline:\s(.+)/)?.[1] || "0";
 
-  return { time, packs, ppm, online, offline };
+  // 👇 Detect instances
+  const onlineMatch = content.match(/Online:\s([\d,\s]+)/);
+  const offlineMatch = content.match(/Offline:\s([\d,\s]+)/);
+
+  const onlineList = onlineMatch
+    ? onlineMatch[1].split(",").map(x => x.trim()).filter(Boolean)
+    : [];
+
+  const offlineList = offlineMatch
+    ? offlineMatch[1].split(",").map(x => x.trim()).filter(Boolean)
+    : [];
+
+  const active = onlineList.length;
+  const total = onlineList.length + offlineList.length;
+
+  return { time, packs, ppm, active, total };
 }
 
-// 🔍 BUSCAR MENSAJE DEL USUARIO
+// 🔍 FIND MESSAGE
 function findUserMessage(messages, username) {
-  return messages.find(msg => msg.content.startsWith(username));
+  return messages.find(m => m.content.startsWith(username));
 }
 
-// 📊 GENERAR PANEL
+// 📊 GENERATE PANEL
 async function generatePanel() {
-  const users = await fetchJSON(CONFIG.statsUrl);
-  const onlineIDs = await fetchOnlineIDs(CONFIG.onlineUrl);
+  const users = await fetchJSON(statsUrl);
+  const onlineIDs = await fetchOnlineIDs(onlineUrl);
 
-  const channel = await client.channels.fetch(CONFIG.heartbeatChannelId);
+  const channel = await client.channels.fetch(heartbeatChannelId);
   const messages = await channel.messages.fetch({ limit: 30 });
 
   let onlineList = [];
@@ -81,12 +92,10 @@ async function generatePanel() {
         const stats = parseStats(msg.content);
 
         onlineList.push(
-          `🟢 **${user.name}**\n` +
-          `⚡ ${stats.ppm} ppm | 📦 ${stats.packs} | ⏱ ${stats.time}\n` +
-          `🖥 ${stats.online} 🟢 / ${stats.offline} 🔴`
+          `🟢 **${user.name}** | ⚡ ${stats.ppm} ppm | 📦 ${stats.packs} | ⏱ ${stats.time} | 🖥 ${stats.active}/${stats.total}`
         );
       } else {
-        onlineList.push(`🟢 **${user.name}** (sin datos)`);
+        onlineList.push(`🟢 **${user.name}** | no data`);
       }
 
     } else {
@@ -95,38 +104,36 @@ async function generatePanel() {
   }
 
   return new EmbedBuilder()
-    .setTitle("🐉 Panel de Reroll")
+    .setTitle("🐉 Dragon Stats Panel")
     .setColor(0x5865F2)
     .addFields(
       {
         name: `🟢 Online (${onlineList.length})`,
-        value: onlineList.join("\n\n") || "Nadie online"
+        value: onlineList.join("\n") || "No users online"
       },
       {
         name: `🔴 Offline (${offlineList.length})`,
-        value: offlineList.join("\n") || "Nadie offline"
+        value: offlineList.join("\n") || "No users offline"
       }
     )
     .setTimestamp();
 }
 
-// 🚀 BOT READY
+// 🚀 READY
 client.once('ready', async () => {
-  console.log(`✅ Bot listo como ${client.user.tag}`);
+  console.log(`✅ Bot ready: ${client.user.tag}`);
 
-  const panelChannel = await client.channels.fetch(CONFIG.panelChannelId);
+  const panelChannel = await client.channels.fetch(panelChannelId);
 
-  // Crear panel inicial
   const embed = await generatePanel();
   panelMessage = await panelChannel.send({ embeds: [embed] });
 
-  // 🔁 Actualizar cada 30s
   setInterval(async () => {
     try {
       const newEmbed = await generatePanel();
       await panelMessage.edit({ embeds: [newEmbed] });
     } catch (err) {
-      console.error("❌ Error actualizando panel:", err);
+      console.error("❌ Update error:", err);
     }
   }, 30000);
 });
