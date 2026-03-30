@@ -5,8 +5,8 @@ const axios = require('axios');
 const TOKEN = process.env.LATIOS_TOKEN;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-if (!TOKEN || !GITHUB_TOKEN) {
-  console.error("❌ Missing tokens");
+if (!TOKEN) {
+  console.error("❌ Missing bot token");
   process.exit(1);
 }
 
@@ -16,6 +16,9 @@ const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496f
 
 const ppmGistId = "fb7dd70fceaa1743943e67176352ffbd";
 const ppmFileName = "ppm.json";
+
+// 🆕 GP GIST
+const gpUrl = "https://gist.githubusercontent.com/WrPages/4773653072f4851e91958a333e503de9/raw/gp_live_stats.json";
 
 const heartbeatChannelId = "1483616146996465735";
 const panelChannelId = "1484015417411244082";
@@ -27,7 +30,7 @@ const client = new Client({
 
 let panelMessage = null;
 let lastTotalPPM = 0;
-let cachedAvgPPM = "0.00"; // 🔥 NUEVO
+let cachedAvgPPM = "0.00";
 
 // 📥 FETCH
 async function fetchJSON(url) {
@@ -40,26 +43,17 @@ async function fetchOnlineIDs(url) {
   return res.data.split("\n").map(x => x.trim()).filter(Boolean);
 }
 
-// 🧠 GIST READ
+// 🧠 PPM
 async function getPPMHistory() {
   try {
     const res = await axios.get(`https://api.github.com/gists/${ppmGistId}`);
     const file = res.data.files[ppmFileName];
-
-    if (!file || !file.content) return { history: [] };
-
-    const parsed = JSON.parse(file.content);
-    if (!parsed.history || !Array.isArray(parsed.history)) {
-      return { history: [] };
-    }
-
-    return parsed;
+    return file ? JSON.parse(file.content) : { history: [] };
   } catch {
     return { history: [] };
   }
 }
 
-// 💾 GUARDAR PPM
 async function storePPM(value) {
   const data = await getPPMHistory();
 
@@ -81,35 +75,62 @@ async function storePPM(value) {
         }
       }
     },
-    {
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`
-      }
-    }
+    { headers: { Authorization: `Bearer ${GITHUB_TOKEN}` } }
   );
 }
 
-// 📊 CALCULAR AVG (USADO CADA 5 MIN)
 async function refreshAveragePPM() {
+  const data = await getPPMHistory();
+
+  const values = data.history.map(x => x.ppm).filter(x => x > 0);
+  if (!values.length) return cachedAvgPPM = "0.00";
+
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  cachedAvgPPM = avg.toFixed(2);
+}
+
+// 🧠 GP STATS
+async function getGPStats() {
   try {
-    const data = await getPPMHistory();
+    const data = await fetchJSON(gpUrl);
 
-    const values = data.history
-      .map(x => Number(x.ppm))
-      .filter(x => !isNaN(x) && x > 0);
+    const todayGP = data.totalGP || 0;
+    const todayAlive = data.totalAlive || 0;
 
-    if (!values.length) {
-      cachedAvgPPM = "0.00";
-      return;
-    }
+    const history = data.history || [];
 
-    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    cachedAvgPPM = avg.toFixed(2);
+    const last5 = history.slice(-5);
 
-    console.log("📊 Avg actualizado:", cachedAvgPPM);
+    const avgGP = last5.length
+      ? (last5.reduce((a, b) => a + (b.gp || 0), 0) / last5.length).toFixed(2)
+      : "0.00";
 
-  } catch (e) {
-    console.error("❌ Avg error:", e);
+    const avgAlive = last5.length
+      ? (last5.reduce((a, b) => a + (b.alive || 0), 0) / last5.length).toFixed(2)
+      : "0.00";
+
+    const historyText = last5.map(d => {
+      const date = new Date(d.date);
+      const formatted = `${(date.getMonth()+1).toString().padStart(2,"0")}/${date.getDate().toString().padStart(2,"0")}`;
+      return `📅 ${formatted} → ${d.gp} GP (${d.alive} alive)`;
+    }).join("\n");
+
+    return {
+      todayGP,
+      todayAlive,
+      avgGP,
+      avgAlive,
+      historyText: historyText || "No data"
+    };
+
+  } catch {
+    return {
+      todayGP: 0,
+      todayAlive: 0,
+      avgGP: "0.00",
+      avgAlive: "0.00",
+      historyText: "Error loading data"
+    };
   }
 }
 
@@ -138,18 +159,17 @@ function findLastUserMessage(messages, username) {
   return messages.find(m => m.content.toLowerCase().includes(name));
 }
 
-// ⏱ FETCH MENSAJES
 async function fetchMessagesByHours(channel, hours) {
   let all = [];
   let lastId = null;
-  const limitTime = Date.now() - hours * 3600000;
+  const limit = Date.now() - hours * 3600000;
 
   while (true) {
     const msgs = await channel.messages.fetch({ limit: 100, before: lastId });
     if (!msgs.size) break;
 
     for (const msg of msgs.values()) {
-      if (msg.createdTimestamp < limitTime) return all;
+      if (msg.createdTimestamp < limit) return all;
       all.push(msg);
     }
 
@@ -165,7 +185,7 @@ function calculateGlobalStats(onlineStats) {
 
   for (const s of onlineStats) {
     totalPPM += s.ppm;
-    totalInstances += s.online.filter(x => x !== "1").length;
+    totalInstances += s.online.length;
     totalPacks += s.packs;
   }
 
@@ -227,6 +247,7 @@ async function generatePanel() {
   }
 
   const global = calculateGlobalStats(onlineStats);
+  const gp = await getGPStats();
 
   return [
     new EmbedBuilder()
@@ -248,11 +269,19 @@ async function generatePanel() {
         `🔥 Instancias: ${global.totalInstances}\n` +
         `📊 PPM/inst: ${global.ppmPerInstance}\n\n` +
 
-        `👥 ${global.users} users\n` +
-        `📈 Avg inst: ${global.avgInstances}\n\n` +
-
         `🎯 ${global.minutesToGP} min / GP\n` +
-        `🚀 ${global.gpPerHour} GP/h`
+        `🚀 ${global.gpPerHour} GP/h\n\n` +
+
+        `━━━━━━━━━━━━━━\n` +
+
+        `🎯 **TODAY GP**\n` +
+        `✨ ${gp.todayGP} | 💖 ${gp.todayAlive}\n\n` +
+
+        `📊 **AVG (5 DAYS)**\n` +
+        `# **${gp.avgGP} GP**\n` +
+        `💖 ${gp.avgAlive} alive\n\n` +
+
+        `📅 **LAST 5 DAYS**\n${gp.historyText}`
       )
   ];
 }
@@ -263,25 +292,19 @@ client.once('ready', async () => {
 
   const channel = await client.channels.fetch(panelChannelId);
 
-  // 🔥 INIT AVG
   await refreshAveragePPM();
 
   const embeds = await generatePanel();
   panelMessage = await channel.send({ embeds });
 
-  // 💾 PRIMER GUARDADO
   await storePPM(lastTotalPPM);
 
-  // 🔄 PANEL
   setInterval(async () => {
     const embeds = await generatePanel();
     await panelMessage.edit({ embeds });
   }, 300000);
 
-  // 🔄 ACTUALIZAR AVG CADA 5 MIN
   setInterval(refreshAveragePPM, 300000);
-
-  // 💾 GUARDAR CADA 30 MIN
   setInterval(() => storePPM(lastTotalPPM), 1800000);
 });
 
