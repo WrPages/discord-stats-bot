@@ -274,7 +274,7 @@ async function generatePanel() {
 
   `🎯 **TODAY GP**\n` +
   `# **${gp.todayGP}**\n` +
-  `💖 ${gp.todayAlive}\n\n` +
+  `💖 ${gp.todayAlive}\n\n` 
 
 
 
