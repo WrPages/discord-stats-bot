@@ -129,7 +129,7 @@ async function generatePanel() {
         // 🟢 ONLINE (SIN CAMBIOS)
         onlineList.push(
           `⚔️ **__${user.name}__**\n` +
-          `⚡ **PPM:** ${stats.ppm} | 📦 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
+          `⚡ **PPM:** ${stats.ppm} | 🎴 **Packs:** ${stats.packs} | ⏱ **Time:** ${stats.time}\n` +
           `🔥 ${formatList(stats.online)}\n` +
           `💤 ${formatList(stats.offline)}`
         );
@@ -137,7 +137,7 @@ async function generatePanel() {
       } else {
         // 💤 OFFLINE (COMPACTO)
         offlineList.push(
-          `💤 **__${user.name}__** | 📦 ${stats.packs} | ⏱ ${stats.time}`
+          `💤 **__${user.name}__** | 🎴 ${stats.packs} | ⏱ ${stats.time}`
         );
       }
 
