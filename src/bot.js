@@ -331,23 +331,25 @@ client.once('ready', async () => {
 
   await refreshAveragePPM();
 
-const embeds = await generatePanel();
+  const embeds = await generatePanel();
 
-try {
-  // 🔥 intentar obtener mensaje existente
-  panelMessage = await channel.messages.fetch(PANEL_MESSAGE_ID);
+  // 🔍 Buscar mensaje existente del bot
+  const messages = await channel.messages.fetch({ limit: 20 });
 
-  // editar si existe
-  await panelMessage.edit({ embeds });
+  panelMessage = messages.find(
+    msg =>
+      msg.author.id === client.user.id &&
+      msg.embeds.length > 0 &&
+      msg.embeds[0].title === "📊 Global Stats"
+  );
 
-} catch (err) {
-  console.log("⚠️ Panel no encontrado, creando nuevo...");
-
-  // crear si no existe
-  panelMessage = await channel.send({ embeds });
-
-  console.log("📌 Nuevo panel ID:", panelMessage.id);
-}
+  if (panelMessage) {
+    console.log("♻️ Panel encontrado, editando...");
+    await panelMessage.edit({ embeds });
+  } else {
+    console.log("🆕 Panel no encontrado, creando...");
+    panelMessage = await channel.send({ embeds });
+  }
 
   await storePPM(lastTotalPPM);
 
