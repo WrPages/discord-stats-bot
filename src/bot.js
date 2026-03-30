@@ -228,13 +228,13 @@ async function generatePanel() {
 
       onlineList.push(
         `⚔️ **${user.name}**\n` +
-        `⚡ ${stats.ppm} | 🎴 ${stats.packs} | ⏱ ${stats.time}\n` +
+        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time}\n` +
         `🔥 ${formatList(stats.online)}\n` +
         `💤 ${formatList(stats.offline)}`
       );
     } else {
       offlineList.push(
-        `💤 **${user.name}** | 🎴 ${stats.packs} | ⏱ ${stats.time}`
+        `💤 **${user.name}** | 🧧 ${stats.packs} | ⏱ ${stats.time}`
       );
     }
   }
@@ -254,27 +254,33 @@ async function generatePanel() {
     new EmbedBuilder()
       .setTitle("📊 Global Stats")
       .setColor(0xF1C40F)
-      .setDescription(
-        `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
+    .setDescription(
+  `⚡ PPM\n` +
+  `# **${global.totalPPM}**\n` +
+  `📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
 
-        `📦 Packs: ${global.totalPacks}\n` +
-        `⚡ Avg/user: ${global.avgPPM}\n` +
-        `🔥 Instancias: ${global.totalInstances}\n` +
-        `📊 PPM/inst: ${global.ppmPerInstance}\n\n` +
+  `👥 Usuarios activos: **${global.users}**\n` +
+  `📦 Packs totales: **${global.totalPacks}**\n` +
+  `⚡ Avg PPM/user: **${global.avgPPM}**\n\n` +
 
-        `🎯 ${global.minutesToGP} min / GP\n` +
-        `🚀 ${global.gpPerHour} GP/h\n\n` +
+  `🔥 Instancias totales: **${global.totalInstances}**\n` +
+  `📊 Avg instancias: **${global.avgInstances}**\n\n` +
 
-        `━━━━━━━━━━━━━━\n` +
+  `🎯 Predicción GP:\n` +
+  `⏱ ${global.minutesToGP} min / GP\n` +
+  `🚀 ${global.gpPerHour} GP/h\n\n` +
 
-        `🎯 **TODAY GP**\n` +
-        `# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
+  `━━━━━━━━━━━━━━\n\n` +
 
-        `📊 **TOTAL GP (GLOBAL)**\n` +
-        `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+  `🎯 **TODAY GP**\n` +
+  `# **${gp.todayGP}**\n` +
+  `💖 ${gp.todayAlive}\n\n` +
 
-        `📅 **LAST 5 DAYS**\n${gp.historyText}`
-      )
+  `📊 **TOTAL GP (GLOBAL)**\n` +
+  `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
+
+  `📅 **LAST 5 DAYS**\n${gp.historyText}`
+)
   ];
 }
 
