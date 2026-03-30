@@ -311,7 +311,7 @@ async function generatePanel() {
 `# **${gp.todayGP}**\n` +
 `💖 ${gp.todayAlive}\n\n` +
 
-`📊 **TOTAL GP (GLOBAL)**\n` +
+`📊 **TOTAL GP (5days)**\n` +
 `${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
 
 `📅 **LAST 5 DAYS**\n${gp.historyText}`
