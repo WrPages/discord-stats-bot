@@ -94,32 +94,27 @@ async function getGPStats() {
   try {
     const data = await fetchJSON(gpUrl);
 
-    const todayGP = data.totalGP || 0;
-    const todayAlive = data.totalAlive || 0;
+    const todayGP = data.daily?.gp || 0;
+    const todayAlive = data.daily?.alive || 0;
+
+    const totalGP = data.totalGP || 0;
+    const totalAlive = data.totalAlive || 0;
 
     const history = data.history || [];
 
     const last5 = history.slice(-5);
 
-    const avgGP = last5.length
-      ? (last5.reduce((a, b) => a + (b.gp || 0), 0) / last5.length).toFixed(2)
-      : "0.00";
-
-    const avgAlive = last5.length
-      ? (last5.reduce((a, b) => a + (b.alive || 0), 0) / last5.length).toFixed(2)
-      : "0.00";
-
     const historyText = last5.map(d => {
       const date = new Date(d.date);
       const formatted = `${(date.getMonth()+1).toString().padStart(2,"0")}/${date.getDate().toString().padStart(2,"0")}`;
-      return `📅 ${formatted} → ${d.gp} GP (${d.alive} alive)`;
+      return `📅 ${formatted} → ${d.gp} (${d.alive})`;
     }).join("\n");
 
     return {
       todayGP,
       todayAlive,
-      avgGP,
-      avgAlive,
+      totalGP,
+      totalAlive,
       historyText: historyText || "No data"
     };
 
@@ -127,9 +122,9 @@ async function getGPStats() {
     return {
       todayGP: 0,
       todayAlive: 0,
-      avgGP: "0.00",
-      avgAlive: "0.00",
-      historyText: "Error loading data"
+      totalGP: 0,
+      totalAlive: 0,
+      historyText: "Error"
     };
   }
 }
@@ -261,27 +256,24 @@ async function generatePanel() {
     new EmbedBuilder()
       .setTitle("📊 Global Stats")
       .setColor(0xF1C40F)
-      .setDescription(
-        `⚡ PPM\n# **${global.totalPPM}**\n📉 Avg 12h: **${cachedAvgPPM}**\n\n` +
-
-        `📦 Packs: ${global.totalPacks}\n` +
-        `⚡ Avg/user: ${global.avgPPM}\n` +
-        `🔥 Instancias: ${global.totalInstances}\n` +
-        `📊 PPM/inst: ${global.ppmPerInstance}\n\n` +
-
-        `🎯 ${global.minutesToGP} min / GP\n` +
-        `🚀 ${global.gpPerHour} GP/h\n\n` +
-
-        `━━━━━━━━━━━━━━\n` +
-
-        `🎯 **TODAY GP**\n` +
-        `✨ ${gp.todayGP} | 💖 ${gp.todayAlive}\n\n` +
-
-        `📊 **AVG (5 DAYS)**\n` +
-        `# **${gp.avgGP} GP**\n` +
-        `💖 ${gp.avgAlive} alive\n\n` +
-
-        `📅 **LAST 5 DAYS**\n${gp.historyText}`
+      .addFields(
+        {
+          name: "⚡ GLOBAL",
+          value:
+            `# **${global.totalPPM}**\n📉 Avg 12h: ${cachedAvgPPM}\n\n` +
+            `📦 ${global.totalPacks} packs\n🔥 ${global.totalInstances} inst\n` +
+            `⚡ ${global.avgPPM} avg\n📊 ${global.ppmPerInstance} ppm/inst`,
+          inline: true
+        },
+        {
+          name: "🎯 GP",
+          value:
+            `# **${gp.todayGP}**\n💖 **${gp.todayAlive}**\n` +
+            `Daily\n\n` +
+            `📊 Avg 5d: ${gp.totalGP} / ${gp.totalAlive}\n\n` +
+            `📅\n${gp.historyText}`,
+          inline: true
+        }
       )
   ];
 }
