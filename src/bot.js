@@ -261,12 +261,13 @@ async function generatePanel() {
     if (isOnline) {
       onlineStats.push(stats);
 
-      onlineList.push(
-        `⚔️ **${user.name}**\n` +
-        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time}\n` +
-        `🔥 ${formatList(stats.online)}\n` +
-        `💤 ${formatList(stats.offline)}`
-      );
+   // contar instancias (sin main)
+const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
+const offlineCount = stats.offline.includes("none") ? 0 : stats.offline.length;
+
+onlineList.push(
+  `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 on-${onlineCount} | 💤 off-${offlineCount}`
+);
     } else {
       offlineList.push(
         `💤 **${user.name}** | 🧧 ${stats.packs} | ⏱ ${stats.time}`
