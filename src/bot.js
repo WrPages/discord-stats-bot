@@ -307,10 +307,6 @@ async function generatePanel() {
 
   `━━━━━━━━━━━━━━\n\n` +
 
-    `🎯 **TODAY GP**\n` +
-  `# **${gp.todayGP}**\n` +
-  `💖 ${gp.todayAlive}\n\n` +
-
 `🎯 **TODAY GP**\n` +
 `# **${gp.todayGP}**\n` +
 `💖 ${gp.todayAlive}\n\n` +
