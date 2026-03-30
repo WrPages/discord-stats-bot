@@ -39,12 +39,27 @@ async function fetchOnlineIDs(url) {
   return res.data.split("\n").map(x => x.trim()).filter(Boolean);
 }
 
-// 🧠 GIST READ
+// 🧠 GIST READ (FIXED)
 async function getPPMHistory() {
   try {
     const res = await axios.get(`https://api.github.com/gists/${ppmGistId}`);
-    return JSON.parse(res.data.files[ppmFileName].content);
-  } catch {
+
+    const file = res.data.files[ppmFileName];
+
+    if (!file || !file.content) {
+      return { history: [] };
+    }
+
+    const parsed = JSON.parse(file.content);
+
+    if (!parsed.history || !Array.isArray(parsed.history)) {
+      return { history: [] };
+    }
+
+    return parsed;
+
+  } catch (e) {
+    console.log("⚠️ Gist vacío o inválido, creando nuevo...");
     return { history: [] };
   }
 }
@@ -84,11 +99,17 @@ async function storePPM(value) {
   await savePPMHistory(data);
 }
 
-// 📊 CALCULAR MEDIA
+// 📊 MEDIA (FIXED)
 async function getAveragePPM() {
   const data = await getPPMHistory();
 
-  const values = data.history.map(x => x.ppm).filter(x => x > 0);
+  if (!data.history || !Array.isArray(data.history)) {
+    return "0.00";
+  }
+
+  const values = data.history
+    .map(x => Number(x.ppm))
+    .filter(x => !isNaN(x) && x > 0);
 
   if (!values.length) return "0.00";
 
@@ -188,7 +209,6 @@ async function generatePanel() {
       (user.sec_id && onlineIDs.includes(user.sec_id));
 
     const msg = findLastUserMessage(messages, user.name);
-
     if (!msg) continue;
 
     const stats = parseStats(msg.content);
@@ -237,10 +257,8 @@ client.once('ready', async () => {
   console.log(`✅ Ready: ${client.user.tag}`);
 
   const channel = await client.channels.fetch(panelChannelId);
-
   panelMessage = await channel.send({ embeds: await generatePanel() });
 
-  // 🔄 PANEL
   setInterval(async () => {
     try {
       const embeds = await generatePanel();
@@ -250,7 +268,6 @@ client.once('ready', async () => {
     }
   }, 300000);
 
-  // 💾 GUARDADO REAL
   setInterval(async () => {
     try {
       await storePPM(lastTotalPPM);
