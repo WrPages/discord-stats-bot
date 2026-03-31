@@ -282,56 +282,46 @@ const globalEmbed = new EmbedBuilder()
   .setColor(0x00D1FF)
 
   .addFields(
+    {
+      name: "\u200B",
+      value:
+        `👥 **Users**        │ 📦 **Packs**\n` +
+        `\`${global.users}\`             │ \`${global.totalPacks}\``,
+      inline: false
+    },
+    {
+      name: "\u200B",
+      value:
+        `⚡ **Avg/User**    │ 🔥 **Instances**\n` +
+        `\`${global.avgPPM}\`           │ \`${global.totalInstances}\``,
+      inline: false
+    },
+    {
+      name: "\u200B",
+      value:
+        `📊 **Avg Inst.**   │ 🎯 **GP/h**\n` +
+        `\`${global.avgInstances}\`      │ \`${global.gpPerHour}\``,
+      inline: false
+    },
+    {
+      name: "\u200B",
+      value:
+        `⏱ **Min/GP**      │ 🌟 **Today GP**\n` +
+        `\`${global.minutesToGP}\`       │ \`${gp.todayGP}\``,
+      inline: false
+    },
+    {
+      name: "\u200B",
+      value:
+        `💫 **Total (5d)** │ 💖 **Alive**\n` +
+        `\`${gp.totalGP}\`          │ \`${gp.totalAlive}\``,
+      inline: false
+    },
 
-    // 🔹 FILA 1
     {
-      name: "👥 Rerollers",
-      value: `**${global.users}**`,
-      inline: true
-    },
-    {
-      name: "🖥 Instances",
-      value: `**${global.totalInstances}/${global.maxInstances || 59}**`,
-      inline: true
-    },
-    {
-      name: "⚖️ Avg. Instances",
-      value: `**${global.avgInstances}**`,
-      inline: true
-    },
-
-    // 🔹 FILA 2
-    {
-      name: "⚡ Packs / Min",
-      value: `**${global.totalPPM}**`,
-      inline: true
-    },
-    {
-      name: "⏱ Packs / Hour",
-      value: `**${(global.totalPPM * 60).toLocaleString()}**`,
-      inline: true
-    },
-    {
-      name: "📊 Avg. PPH",
-      value: `**${cachedAvgPPM}**`,
-      inline: true
-    },
-
-    // 🔹 FILA 3
-    {
-      name: "📦 Group 24h Packs",
-      value: `**${global.totalPacks}**`,
-      inline: true
-    },
-    {
-      name: "🌈 Live GPs 24h",
-      value: `**${gp.todayGP}**`,
-      inline: true
-    },
-    {
-      name: "\u200B", // 👈 IMPORTANTE (relleno para mantener formato)
-      value: "\u200B",
-      inline: true
+      name: "📅 Last 5 Days",
+      value: gp.historyText || "No data",
+      inline: false
     }
   );
 
