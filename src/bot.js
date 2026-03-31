@@ -296,14 +296,14 @@ const globalEmbed = new EmbedBuilder()
       name: "\u200B",
       value:
         `👥.  **Users**            🧧 **Packs**           ⚡ **Avg/User**\n` +
-`${pad(global.users)}      ${pad(global.totalPacks)}            ${pad(global.avgPPM)}`,
+`${pad(global.users)}          ${pad(global.totalPacks)}        ${pad(global.avgPPM)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
  `🔥 **Instances**       📊 **Avg Inst.**          🎯 **GP/h**\n` +
-        `${pad(global.totalInstances)}   ${pad(global.avgInstances)}         ${pad(global.gpPerHour)}`,
+        `${pad(global.totalInstances)}           ${pad(global.avgInstances)} ${pad(global.gpPerHour)}`,
       inline: false
     },
     {
