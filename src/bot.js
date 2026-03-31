@@ -295,7 +295,7 @@ const globalEmbed = new EmbedBuilder()
     {
       name: "\u200B",
       value:
-        `👥.  **Users**        🧧 **Packs**           ⚡ **Avg/User**\n` +
+        `👥.  **Users**            🧧 **Packs**           ⚡ **Avg/User**\n` +
 `${pad(global.users)}      ${pad(global.totalPacks)}            ${pad(global.avgPPM)}`,
       inline: false
     },
@@ -309,7 +309,7 @@ const globalEmbed = new EmbedBuilder()
     {
       name: "\u200B",
       value:
-        `⏱ **Min/GP**       🌟 **Today GP**     💫 **Total (5d)**\n` +
+        `⏱ **Min/GP**           🌟 **Today GP**     💫 **Total (5d)**\n` +
  `${pad(global.minutesToGP)}         ${pad(gp.todayGP)}            ${pad(gp.totalGP)}`,
       inline: false
     },
