@@ -18,167 +18,154 @@ const {
 const fetch = require("node-fetch");
 
 // ===== CONFIG =====
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 
-const HEARTBEAT_CHANNEL_ID = "ID_HEARTBEAT";
-const ALERTS_CHANNEL_ID = "ID_ALERTS";
-const CATEGORY_ID = "ID_CATEGORIA_CANALES";
 
-const USERS_GIST_ID = "bb18eda2ea748723d8fe0131dd740b70";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-// ===== CLIENT =====
+const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
+const axios = require("axios");
+
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
 
-// ===== CACHE DE CANALES =====
-const userChannels = new Map();
+// ================= CONFIG =================
+const DISCORD_TOKEN = "TU_TOKEN";
+const HEARTBEAT_CHANNEL_ID = "CANAL_DONDE_LLEGA_EL_HEARTBEAT";
+const ALERTS_CHANNEL_ID = "CANAL_PUBLICO_ALERTS";
+const CATEGORY_ID = "CATEGORIA_CANALES_PRIVADOS";
+const USERS_GIST_URL = "URL_RAW_DEL_GIST";
 
-// ===== GET USERS =====
-async function getUsers() {
-  try {
-    const res = await fetch(`https://api.github.com/gists/${USERS_GIST_ID}`, {
-      headers: { Authorization: `token ${GITHUB_TOKEN}` }
-    });
+// ================= DATA =================
+let usersMap = [];
+let lastStates = {}; // anti-spam
 
-    const data = await res.json();
-    return JSON.parse(data.files["elite_users.json"].content || "{}");
-  } catch {
-    return {};
-  }
+// ================= LOAD USERS =================
+async function loadUsers() {
+  const res = await axios.get(USERS_GIST_URL);
+  const data = res.data;
+
+  usersMap = Object.entries(data).map(([discordId, user]) => ({
+    discord_id: discordId,
+    name: user.name,
+    main_id: user.main_id,
+    sec_id: user.sec_id
+  }));
+
+  console.log("Usuarios cargados:", usersMap.length);
 }
 
-// ===== CREAR CANAL PRIVADO =====
-async function getOrCreateChannel(guild, discordId, username) {
-  if (userChannels.has(discordId)) return userChannels.get(discordId);
+// ================= PARSER =================
+function parseMessage(content) {
+  return {
+    name: content.split("\n")[0].trim(),
+    online: content.match(/Online:\s(.+)/)?.[1]?.split(",").map(x => x.trim()) || [],
+    offline: content.match(/Offline:\s(.+)/)?.[1]?.split(",").map(x => x.trim()) || []
+  };
+}
 
-  // buscar existente
+// ================= CANAL PRIVADO =================
+async function getUserChannel(guild, user) {
   const existing = guild.channels.cache.find(
-    c => c.name === `user-${username}`
+    c => c.name === `user-${user.discord_id}`
   );
 
-  if (existing) {
-    userChannels.set(discordId, existing);
-    return existing;
-  }
+  if (existing) return existing;
 
-  // crear nuevo
-  const channel = await guild.channels.create({
-    name: `user-${username}`,
+  return await guild.channels.create({
+    name: `user-${user.discord_id}`,
     type: ChannelType.GuildText,
-    parent: CATEGORY_ID || null,
+    parent: CATEGORY_ID,
     permissionOverwrites: [
       {
-        id: guild.roles.everyone,
-        deny: [PermissionsBitField.Flags.ViewChannel],
+        id: guild.id,
+        deny: [PermissionsBitField.Flags.ViewChannel]
       },
       {
-        id: discordId,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory
-        ],
-      },
-    ],
+        id: user.discord_id,
+        allow: [PermissionsBitField.Flags.ViewChannel]
+      }
+    ]
   });
-
-  userChannels.set(discordId, channel);
-  return channel;
 }
 
-// ===== PARSEAR MENSAJE =====
-function parseHeartbeat(content) {
-  const usernameMatch = content.match(/^(.+?)\s*\(/);
-  const username = usernameMatch ? usernameMatch[1].trim().toLowerCase() : null;
+// ================= ALERTA =================
+async function sendAlert(guild, user, instance, isMain) {
+  const alertsChannel = guild.channels.cache.get(ALERTS_CHANNEL_ID);
+  const userChannel = await getUserChannel(guild, user);
 
-  const offlineMatch = content.match(/Offline:\s(.+)/);
-  const offline = offlineMatch
-    ? offlineMatch[1].split(",").map(x => x.trim()).filter(Boolean)
-    : [];
+  const color = isMain ? 0xE74C3C : 0xF39C12;
 
-  return { username, offline };
-}
-
-// ===== DETECTAR TIPO DE ALERTA =====
-function getAlertType(userData, offlineList) {
-  if (!offlineList.length) return null;
-
-  const main = userData.main_id;
-  const isMainOffline = offlineList.includes(main);
-
-  return isMainOffline ? "critical" : "warning";
-}
-
-// ===== CREAR EMBED ALERTA =====
-function buildAlertEmbed(username, offlineList, type) {
-  const color = type === "critical" ? 0xff0000 : 0xffa500;
-
-  return new EmbedBuilder()
+  const embed = new EmbedBuilder()
+    .setTitle(isMain ? "🔴 MAIN OFFLINE" : "🟠 INSTANCE OFFLINE")
+    .setDescription(`Instancia **${instance}** de **${user.name}** está offline`)
     .setColor(color)
-    .setTitle(type === "critical" ? "🔴 CRITICAL ALERT" : "🟠 Warning Alert")
-    .setDescription(
-      `**${username}** has offline instances:\n\n` +
-      offlineList.map(x => `• ${x}`).join("\n")
-    )
     .setTimestamp();
-}
 
-// ===== EVENTO PRINCIPAL =====
-client.on("messageCreate", async (message) => {
-  if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
-
-  const users = await getUsers();
-  const { username, offline } = parseHeartbeat(message.content);
-
-  if (!username) return;
-
-  // buscar usuario en gist
-  let discordId = null;
-  let userData = null;
-
-  for (const id in users) {
-    if (users[id].name.toLowerCase() === username) {
-      discordId = id;
-      userData = users[id];
-      break;
-    }
-  }
-
-  if (!discordId) return;
-
-  const guild = message.guild;
-
-  // ===== CANAL PERSONAL =====
-  const userChannel = await getOrCreateChannel(guild, discordId, username);
-
-  // reenviar mensaje
+  // Canal privado
   await userChannel.send({
-    content: `📩 New heartbeat\n\n${message.content}`
+    content: `<@${user.discord_id}>`,
+    embeds: [embed]
   });
 
-  // ===== ALERTAS =====
-  const alertType = getAlertType(userData, offline);
+  // Canal público
+  if (alertsChannel) {
+    await alertsChannel.send({
+      embeds: [embed]
+    });
+  }
+}
 
-  if (alertType) {
-    const embed = buildAlertEmbed(username, offline, alertType);
+// ================= HEARTBEAT HANDLER =================
+client.on("messageCreate", async (msg) => {
+  if (msg.channel.id !== HEARTBEAT_CHANNEL_ID) return;
+  if (!msg.content) return;
 
-    // canal personal
-    await userChannel.send({ embeds: [embed] });
+  const data = parseMessage(msg.content);
 
-    // canal público
-    const alertChannel = await client.channels.fetch(ALERTS_CHANNEL_ID);
-    if (alertChannel) {
-      await alertChannel.send({ embeds: [embed] });
+  const normalize = (str) => str.toLowerCase();
+
+  const user = usersMap.find(
+    u => normalize(u.name) === normalize(data.name)
+  );
+
+  if (!user) return;
+
+  const nowOffline = data.offline
+    .map(x => x.toLowerCase())
+    .filter(x => x !== "none");
+
+  if (!lastStates[user.name]) {
+    lastStates[user.name] = new Set();
+  }
+
+  for (const instance of nowOffline) {
+    if (!lastStates[user.name].has(instance)) {
+      const isMain = instance === "main";
+
+      await sendAlert(msg.guild, user, instance, isMain);
+
+      lastStates[user.name].add(instance);
     }
   }
+
+  // limpiar cuando vuelven online
+  const stillOffline = new Set(nowOffline);
+  lastStates[user.name].forEach(inst => {
+    if (!stillOffline.has(inst)) {
+      lastStates[user.name].delete(inst);
+    }
+  });
 });
 
-// ===== READY =====
-client.once("ready", () => {
-  console.log(`✅ Bot listo: ${client.user.tag}`);
+// ================= READY =================
+client.once("ready", async () => {
+  console.log(`Bot listo como ${client.user.tag}`);
+  await loadUsers();
 });
 
-// ===== LOGIN =====
+// ================= LOGIN =================
 client.login(DISCORD_TOKEN);
