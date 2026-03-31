@@ -238,11 +238,11 @@ async function generatePanel() {
 
       onlineList.push(
         `⚔️ **${user.name}**\n` +
-        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🖥️ ${onlineCount} | 💤 ${offlineCount}`
+        `⚡ ${stats.ppm} | 🃏 ${stats.packs} | ⏱ ${stats.time} | 🖥️ ${onlineCount} | 💤 ${offlineCount}`
       );
     } else {
       offlineList.push(
-        `💤 **${user.name}** | 🧧 ${stats.packs} | ⏱ ${stats.time}`
+        `💤 **${user.name}** | 🃏 ${stats.packs} | ⏱ ${stats.time}`
       );
     }
   }
@@ -294,7 +294,7 @@ const globalEmbed = new EmbedBuilder()
       inline: true
     },
     {
-      name: "📦 Packs",
+      name: "🃏 Packs",
       value: `**${global.totalPacks}**`,
       inline: true
     },
