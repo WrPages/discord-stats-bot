@@ -178,7 +178,7 @@ function findLastUserMessage(messages, username) {
 
     return firstLine === name;
   }) || null;
-}}
+}
  // const name = username.toLowerCase().trim();
 
 
