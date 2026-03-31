@@ -261,7 +261,7 @@ async function generatePanel() {
 
 // 🔥 PANEL 2 (DASHBOARD REAL)
 // 🔧 helper para columnas
-const col = (text, space = 20) => text.padEnd(space, " ");
+const col = (text, space = 22) => text.padEnd(space, " ");
 
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
@@ -272,22 +272,22 @@ const globalEmbed = new EmbedBuilder()
     `# ⚡ ${global.totalPPM} PPM\n` +
     `📉 Avg: ${cachedAvgPPM}\n\n` +
 
-    // 🔹 FILA 1 (YA ENTRAN LOS 3 PERFECTO)
-    col(`👥 Users: ${global.users}`) +
-    col(`📦 Packs: ${global.totalPacks}`) +
-    `⚡ Avg/User: ${global.avgPPM}\n` +
+    // 🔹 FILA 1 (3 columnas)
+    col(`👥 Users\n${global.users}`) +
+    col(`📦 Packs\n${global.totalPacks}`) +
+    `⚡ Avg/User\n${global.avgPPM}\n\n` +
 
-    // 🔹 FILA 2
-    col(`🔥 Instances: ${global.totalInstances}`) +
-    `📊 Avg: ${global.avgInstances}\n` +
+    // 🔹 FILA 2 (2 columnas)
+    col(`🔥 Instances\n${global.totalInstances}`) +
+    `📊 Avg\n${global.avgInstances}\n\n` +
 
-    // 🔹 FILA 3
-    col(`🎯 GP/h: ${global.gpPerHour}`) +
-    `⏱ Min/GP: ${global.minutesToGP}\n\n` +
+    // 🔹 FILA 3 (2 columnas)
+    col(`🎯 GP/h\n${global.gpPerHour}`) +
+    `⏱ Min/GP\n${global.minutesToGP}\n\n` +
 
-    // 🔥 GP SECTION ALINEADO
-    col(`🌟 GP Today: **${gp.todayGP}** 💖 ${gp.todayAlive}`) +
-    `💫 Total (5d): **${gp.totalGP}** 💖 ${gp.totalAlive}\n\n` +
+    // 🔥 GP SECTION (como tarjetas)
+    col(`🌟 GP Today\n**${gp.todayGP}**\n💖 ${gp.todayAlive}`) +
+    `💫 Total (5d)\n**${gp.totalGP}**\n💖 ${gp.totalAlive}\n\n` +
 
     // 📅 HISTORIAL
     `📅 Last 5 Days\n` +
