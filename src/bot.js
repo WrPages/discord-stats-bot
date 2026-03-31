@@ -286,7 +286,7 @@ if (msg) {
   stats = parseStats(msg.content);
 }
 
-    const stats = parseStats(msg.content);
+
 
     const hasOnlineInstances =
   stats.online.length > 0 &&
