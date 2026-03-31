@@ -356,7 +356,7 @@ const globalEmbed = new EmbedBuilder()
       inline: true
     },
     {
-      name: "🀄️ Packs",
+      name: "🀄️ Packs/12h",
       value: `**${global.totalPacks}**`,
       inline: true
     },
