@@ -272,7 +272,7 @@ const globalEmbed = new EmbedBuilder()
 
 `👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n` +
 
-`🔥 **Instances:** ${global.totalInstances}    📊 Avg: ${global.avgInstances}\n` +
+`🔥 **Instances:** ${global.totalInstances}    📊Inst.Avg: ${global.avgInstances}\n` +
 
 `🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
