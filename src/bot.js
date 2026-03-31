@@ -39,7 +39,11 @@ async function fetchJSON(url) {
 
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
-  return res.data.split("\n").map(x => x.trim()).filter(Boolean);
+
+  return res.data
+    .split("\n")
+    .map(x => x.trim().toLowerCase())
+    .filter(x => x && x !== "null" && x !== "undefined");
 }
 
 // 🧠 PPM
@@ -157,10 +161,15 @@ function parseStats(content) {
 
 function findLastUserMessage(messages, username) {
   const name = username.toLowerCase();
-  return messages.find(m => m.content.toLowerCase().includes(name));
+
+  return messages.find(m => {
+    const firstLine = m.content.split("\n")[0]?.toLowerCase().trim();
+    return firstLine === name;
+  });
 }
 
-async function fetchMessagesByHours(channel, hours) {
+async function fetchMessagesByHours(channel, 
+messages.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
   let all = [];
   let lastId = null;
   const limit = Date.now() - hours * 3600000;
@@ -229,18 +238,26 @@ async function generatePanel() {
   let onlineStats = [];
 
   for (const key in users) {
-    const user = users[key];
+const user = {
+  ...users[key],
+  main_id: String(users[key].main_id || "").trim().toLowerCase(),
+  sec_id: String(users[key].sec_id || "").trim().toLowerCase()
+};
 
-    const isOnline =
-      onlineIDs.includes(user.main_id) ||
-      (user.sec_id && onlineIDs.includes(user.sec_id));
+ const isOnline =
+  onlineIDs.includes(user.main_id) ||
+  (user.sec_id && onlineIDs.includes(user.sec_id));
 
     const msg = findLastUserMessage(messages, user.name);
     if (!msg) continue;
 
     const stats = parseStats(msg.content);
 
-    if (isOnline) {
+    const hasOnlineInstances =
+  stats.online.length > 0 &&
+  !stats.online.includes("none");
+
+if (isOnline || hasOnlineInstances) {
       onlineStats.push(stats);
 
       const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
