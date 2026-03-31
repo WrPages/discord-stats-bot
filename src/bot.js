@@ -277,7 +277,7 @@ const col = (text, width = 10) => {
 const colTitle = (text) => col(text, 11);
 const colValue = (text) => col(text, 12); // 👈 más ancho para centrar números
 
-function pad(value, width = 9) {
+function pad(value, width = 13) {
   return String(value).padStart(width, " ");
 }
 
