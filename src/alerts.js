@@ -19,7 +19,8 @@ const client = new Client({
 
 const DISCORD_TOKEN = process.env.LATIOS_TOKEN;
 const HEARTBEAT_CHANNEL_ID = 1483616146996465735;
-const GIST_ID = bb18eda2ea748723d8fe0131dd740b70;
+
+const GIST_ID = process.env.GIST_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const CATEGORY_NAME = Personal_channel || "REROLL USERS";
 
