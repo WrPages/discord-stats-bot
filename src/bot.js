@@ -266,15 +266,15 @@ const globalEmbed = new EmbedBuilder()
   .setDescription(
     `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-    `⚡ **PPM:** ${global.totalPPM}                      👥 **Users:** ${global.users}\n` +
-    `📉 Avg: ${cachedAvgPPM}                             🧧 Packs: ${global.totalPacks}\n` +
+    `⚡ **PPM:** ${global.totalPPM}  👥 **Users:** ${global.users}\n` +
+    `📉 Avg: ${cachedAvgPPM}         🧧 Packs: ${global.totalPacks}\n` +
     `⚡ Avg/User: ${global.avgPPM}\n\n` +
 
     `🔥 **Instances:** ${global.totalInstances}          🎯 **GP/h:** ${global.gpPerHour}\n` +
     `📊 Avg: ${global.avgInstances}                      ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
-    `🎯 **GP TODAY:** ${gp.todayGP}                      📅 **Last 5 Days**\n` +
-    `💖 ${gp.todayAlive}                                 ${gp.historyText}\n\n` +
+    `🎯 **GP TODAY:** ${gp.todayGP}               📅 **Last 5 Days**\n` +
+    `💖 ${gp.todayAlive}                          ${gp.historyText}\n\n` +
 
     `📦 **TOTAL (5d):** ${gp.totalGP}\n` +
     `💖 ${gp.totalAlive}\n\n` +
