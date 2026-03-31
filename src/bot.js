@@ -266,7 +266,8 @@ const globalEmbed = new EmbedBuilder()
   .setDescription(
 `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-`# ⚡ ${global.totalPPM} PPM. **GP TODAY**${gp.todayGP}  \n` +
+`# ⚡ ${global.totalPPM} PPM. \n` +
+
 `📉 Avg: ${cachedAvgPPM}\n\n` +
 
 `👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n` +
@@ -274,6 +275,9 @@ const globalEmbed = new EmbedBuilder()
 `🔥 **Instances:** ${global.totalInstances}    📊 Avg: ${global.avgInstances}\n` +
 
 `🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
+`🎯 **GP today**. ${gp.todayGP} **Alive**${gp.todayAlive}\n` +
+
+
 
 `🎯 **GP TODAY**     # ${gp.todayGP}         📦 **TOTAL (5d)**\n` +
              `# ${gp.todayGP}                        ${gp.totalGP}\n` +
