@@ -259,11 +259,12 @@ async function generatePanel() {
       `🔴 **Offline**\n${offlineList.join("\n") || "None"}`
     );
 
-  // 🔥 PANEL 2 (MEJORADO)
+  // 🔥 PANEL 2 (DASHBOARD REAL)
   const globalEmbed = new EmbedBuilder()
     .setTitle("📊 Global Stats")
     .setColor(0xF1C40F)
     .addFields(
+
       {
         name: "⚡ PPM",
         value: `# **${global.totalPPM}**\n📉 Avg: **${cachedAvgPPM}**`,
@@ -272,12 +273,14 @@ async function generatePanel() {
       {
         name: "👥 Activity",
         value:
-          `Users: **${global.users}**\n` +
+          `👤 Users: **${global.users}**\n` +
           `🧧 Packs: **${global.totalPacks}**\n` +
           `⚡ Avg/User: **${global.avgPPM}**`,
         inline: true
       },
+
       { name: "\u200B", value: "\u200B", inline: false },
+
       {
         name: "🔥 Instances",
         value:
@@ -288,16 +291,20 @@ async function generatePanel() {
       {
         name: "🎯 GP Prediction",
         value:
-          `⏱ ${global.minutesToGP} min/GP\n` +
-          `🚀 ${global.gpPerHour} GP/h`,
+          `⏱ **${global.minutesToGP} min/GP**\n` +
+          `🚀 **${global.gpPerHour} GP/h**`,
         inline: true
       },
+
       { name: "\u200B", value: "\u200B", inline: false },
+
       {
-        name: "🎯 GP Stats",
+        name: "🎯 GP Counter",
         value:
-          `Today:\n# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
-          `Total (5d):\n${gp.totalGP} GP\n💖 ${gp.totalAlive}`,
+          `Today: **${gp.todayGP}**\n` +
+          `💖 ${gp.todayAlive}\n\n` +
+          `Total(5d): **${gp.totalGP}**\n` +
+          `💖 ${gp.totalAlive}`,
         inline: true
       },
       {
