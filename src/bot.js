@@ -275,9 +275,9 @@ const globalEmbed = new EmbedBuilder()
 
 `🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
-`🎯 **GP TODAY:**.                   📦 **TOTAL (5d):**\u200B` +
-`# ${gp.todayGP}.                              ${gp.totalGP}\u200B`+
-`💖**${gp.todayAlive}**.                        💖 **${gp.totalAlive}**\n\n` +
+``🎯 **GP TODAY**              📦 **TOTAL (5d)**\n` +
+`# ${gp.todayGP}                    # ${gp.totalGP}\n` +
+`💖 ${gp.todayAlive}                💖 ${gp.totalAlive}\n\n`                  💖 **${gp.totalAlive}**\n\n` +
 
 
 `📅 **Last 5 Days**\n` +
