@@ -277,48 +277,63 @@ const col = (text, width = 10) => {
 const colTitle = (text) => col(text, 11);
 const colValue = (text) => col(text, 12); // 👈 más ancho para centrar números
 
-function pad(value, width = 17) {
-  return String(value).padStart(width, " ");
-}
-
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0x00D1FF)
 
-  // 🔥 HEADER GRANDE
+  // 🔥 HEADER GRANDE (lo más importante)
   .setDescription(
     `# ⚡ ${global.totalPPM} PPM\n` +
-    `📉 Avg (12h): ${cachedAvgPPM}`
+    `📉 Avg (12h): **${cachedAvgPPM}**`
   )
 
   .addFields(
     {
-      name: "\u200B",
-      value:
-        `👥.  **Users**            🧧 **Packs**           ⚡ **Avg/User**\n` +
-`${pad(global.users)}          ${pad(global.totalPacks)}        ${pad(global.avgPPM)}`,
-      inline: false
+      name: "👥 Users",
+      value: `**${global.users}**`,
+      inline: true
     },
     {
-      name: "\u200B",
-      value:
- `🔥 **Instances**       📊 **Avg Inst.**          🎯 **GP/h**\n` +
-        `${pad(global.totalInstances)}           ${pad(global.avgInstances)} ${pad(global.gpPerHour)}`,
-      inline: false
+      name: "📦 Packs",
+      value: `**${global.totalPacks}**`,
+      inline: true
     },
     {
-      name: "\u200B",
-      value:
-        `⏱ **Min/GP**           🌟 **Today GP**     💫 **Total (5d)**\n` +
- `${pad(global.minutesToGP)}         ${pad(gp.todayGP)}            ${pad(gp.totalGP)}`,
-      inline: false
+      name: "⚡ Avg/User",
+      value: `**${global.avgPPM}**`,
+      inline: true
+    },
+
+    {
+      name: "🔥 Instances",
+      value: `**${global.totalInstances}**`,
+      inline: true
     },
     {
-      name: "\u200B",
-      value:
-                            `💖 **Alive Today**   💖 **Alive Total**   \u200B\n` +
-                    `${pad(gp.todayAlive)}                 ${pad(gp.totalAlive)}   `,
-      inline: false
+      name: "📊 Avg Instances",
+      value: `**${global.avgInstances}**`,
+      inline: true
+    },
+    {
+      name: "🎯 GP/h",
+      value: `**${global.gpPerHour}**`,
+      inline: true
+    },
+
+    {
+      name: "⏱ Min/GP",
+      value: `**${global.minutesToGP}**`,
+      inline: true
+    },
+    {
+      name: "🌟 GP Today",
+      value: `# **${gp.todayGP}**\n💖 **${gp.todayAlive} alive**`,
+      inline: true
+    },
+    {
+      name: "💫 Total (5d)",
+      value: `# **${gp.totalGP}**\n💖 **${gp.totalAlive} alive**`,
+      inline: true
     },
 
     {
