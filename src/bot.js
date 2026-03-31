@@ -356,7 +356,7 @@ const globalEmbed = new EmbedBuilder()
       inline: true
     },
     {
-      name: "🀄️ Packs/12h",
+      name: "🀄️Pack/12h",
       value: `**${global.totalPacks}**`,
       inline: true
     },
@@ -389,12 +389,12 @@ value: `**${global.instancesDisplay}**`,
     },
     {
       name: "🌟 GP Today",
-      value: `# **${gp.todayGP}**\n💖 **${gp.todayAlive} alive**`,
+      value: ` **${gp.todayGP}**\n💖 **${gp.todayAlive} alive**`,
       inline: true
     },
     {
       name: "💫 Total (5d)",
-      value: `# **${gp.totalGP}**\n💖 **${gp.totalAlive} alive**`,
+      value: ` **${gp.totalGP}**\n💖 **${gp.totalAlive} alive**`,
       inline: true
     },
 
