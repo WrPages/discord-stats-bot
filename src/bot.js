@@ -281,48 +281,65 @@ onlineList.push(
   const gp = await getGPStats();
 
   return [
-    new EmbedBuilder()
-      .setTitle("Elite Four Statistics")
-      .setColor(0x5865F2)
-      .addFields(
-        { name: "🟢 ACTIVE", value: onlineList.join("\n") || "-" },
-        { name: "🔴 INACTIVE", value: offlineList.join("\n") || "-" }
-      ),
+  new EmbedBuilder()
+  .setTitle("📊 Global Stats")
+  .setColor(0xF1C40F)
+  .addFields(
 
-    new EmbedBuilder()
-      .setTitle("📊 Global Stats")
-      .setColor(0xF1C40F)
-  .setDescription(
-  `⚡ PPM\n` +
-  `# **${global.totalPPM}**\n` +
-  `📉 12h Avg: **${cachedAvgPPM}**\n\n` +
+    // 🔥 FILA 1
+    {
+      name: "⚡ PPM",
+      value:
+        `# **${global.totalPPM}**\n` +
+        `📉 Avg: **${cachedAvgPPM}**`,
+      inline: true
+    },
+    {
+      name: "👥 Activity",
+      value:
+        `Users: **${global.users}**\n` +
+        `🧧 Packs: **${global.totalPacks}**\n` +
+        `⚡ Avg/User: **${global.avgPPM}**`,
+      inline: true
+    },
 
-  `👥 Active Users: **${global.users}**\n` +
-  `🧧 Packs/12h: **${global.totalPacks}**\n` +
-  `⚡ Avg PPM/User: **${global.avgPPM}**\n\n` +
+    // 🔻 SALTO
+    { name: "\u200B", value: "\u200B", inline: false },
 
-  `🔥 Total Instances: **${global.totalInstances}**\n` +
-  `📊 Avg Instances: **${global.avgInstances}**\n\n` +
+    // 🔥 FILA 2
+    {
+      name: "🔥 Instances",
+      value:
+        `Total: **${global.totalInstances}**\n` +
+        `Avg: **${global.avgInstances}**`,
+      inline: true
+    },
+    {
+      name: "🎯 GP Prediction",
+      value:
+        `⏱ ${global.minutesToGP} min/GP\n` +
+        `🚀 ${global.gpPerHour} GP/h`,
+      inline: true
+    },
 
-  `🎯 GP Prediction:\n` +
-  `⏱ ${global.minutesToGP} min / GP\n` +
-  `🚀 ${global.gpPerHour} GP/hour\n\n` +
+    // 🔻 SALTO
+    { name: "\u200B", value: "\u200B", inline: false },
 
-  `━━━━━━━━━━━━━━\n\n` +
+    // 🔥 FILA 3 (GP COUNTER)
+    {
+      name: "🎯 GP Stats",
+      value:
+        `Today:\n# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
+        `Total (5d):\n${gp.totalGP} GP\n💖 ${gp.totalAlive}`,
+      inline: true
+    },
+    {
+      name: "📅 Last 5 Days",
+      value: gp.historyText,
+      inline: true
+    }
 
-`🎯 **TODAY GP**\n` +
-`# **${gp.todayGP}**\n` +
-`💖 ${gp.todayAlive}\n\n` +
-
-`📊 **TOTAL GP (5days)**\n` +
-`${gp.totalGP} GP | ${gp.totalAlive} alive\n\n` +
-
-`📅 **LAST 5 DAYS**\n${gp.historyText}`
-
-
-     )
-  ];
-}
+  );
 
 
 
