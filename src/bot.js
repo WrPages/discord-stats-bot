@@ -185,7 +185,7 @@ function findLastUserMessage(messages, username) {
 
     return firstLine === name;
   });
-}
+
 
 
 
