@@ -182,11 +182,18 @@ async function fetchMessagesByHours(channel, hours) {
 function calculateGlobalStats(onlineStats) {
   let totalPPM = 0;
   let totalInstances = 0;
+  let activeInstances = 0;
   let totalPacks = 0;
 
   for (const s of onlineStats) {
     totalPPM += s.ppm;
-    totalInstances += s.online.length;
+
+    const onlineCount = s.online.filter(x => x.toLowerCase() !== "main").length;
+    const offlineCount = s.offline.includes("none") ? 0 : s.offline.length;
+
+    activeInstances += onlineCount;
+    totalInstances += (onlineCount + offlineCount);
+
     totalPacks += s.packs;
   }
 
@@ -197,7 +204,10 @@ function calculateGlobalStats(onlineStats) {
   return {
     totalPPM: totalPPM.toFixed(2),
     avgPPM: (users ? totalPPM / users : 0).toFixed(2),
-    totalInstances,
+
+    // 🔥 AQUÍ ESTÁ EL CAMBIO
+    instancesDisplay: `${activeInstances}/${totalInstances}`,
+
     avgInstances: Math.round(users ? totalInstances / users : 0),
     totalPacks,
     users,
