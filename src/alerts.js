@@ -1,3 +1,9 @@
+
+
+const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
+const axios = require("axios");
+
+// ================= CONFIG =================
 const DISCORD_TOKEN = process.env.LATIOS_TOKEN;
 
 const HEARTBEAT_CHANNEL_ID = "1483616146996465735";
@@ -7,23 +13,7 @@ const CATEGORY_ID = "1488253270068691045"; // opcional pero recomendado
 const USERS_GIST_ID = "bb18eda2ea748723d8fe0131dd740b70";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-const {
-  Client,
-  GatewayIntentBits,
-  ChannelType,
-  PermissionsBitField,
-  EmbedBuilder
-} = require("discord.js");
-
-const fetch = require("node-fetch");
-
-// ===== CONFIG =====
-
-
-
-const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
-const axios = require("axios");
-
+// ================= CLIENT =================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -32,16 +22,9 @@ const client = new Client({
   ]
 });
 
-// ================= CONFIG =================
-const DISCORD_TOKEN = "TU_TOKEN";
-const HEARTBEAT_CHANNEL_ID = "CANAL_DONDE_LLEGA_EL_HEARTBEAT";
-const ALERTS_CHANNEL_ID = "CANAL_PUBLICO_ALERTS";
-const CATEGORY_ID = "CATEGORIA_CANALES_PRIVADOS";
-const USERS_GIST_URL = "URL_RAW_DEL_GIST";
-
 // ================= DATA =================
 let usersMap = [];
-let lastStates = {}; // anti-spam
+let lastStates = {};
 
 // ================= LOAD USERS =================
 async function loadUsers() {
@@ -55,7 +38,7 @@ async function loadUsers() {
     sec_id: user.sec_id
   }));
 
-  console.log("Usuarios cargados:", usersMap.length);
+  console.log("✅ Usuarios cargados:", usersMap.length);
 }
 
 // ================= PARSER =================
@@ -75,24 +58,46 @@ async function getUserChannel(guild, user) {
 
   if (existing) return existing;
 
+  // 🔍 buscar rol Champion por nombre
+  const championRole = guild.roles.cache.find(
+    r => r.name.toLowerCase() === "champion"
+  );
+
   return await guild.channels.create({
     name: `user-${user.discord_id}`,
     type: ChannelType.GuildText,
     parent: CATEGORY_ID,
     permissionOverwrites: [
+      // ❌ oculto para todos
       {
         id: guild.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
+
+      // ✅ acceso usuario dueño
       {
         id: user.discord_id,
-        allow: [PermissionsBitField.Flags.ViewChannel]
-      }
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory
+        ]
+      },
+
+      // ✅ acceso rol Champion
+      ...(championRole ? [{
+        id: championRole.id,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory
+        ]
+      }] : [])
     ]
   });
 }
 
-// ================= ALERTA =================
+// ================= ALERTAS =================
 async function sendAlert(guild, user, instance, isMain) {
   const alertsChannel = guild.channels.cache.get(ALERTS_CHANNEL_ID);
   const userChannel = await getUserChannel(guild, user);
@@ -105,22 +110,21 @@ async function sendAlert(guild, user, instance, isMain) {
     .setColor(color)
     .setTimestamp();
 
-  // Canal privado
+  // 📩 canal privado (con mención)
   await userChannel.send({
     content: `<@${user.discord_id}>`,
     embeds: [embed]
   });
 
-  // Canal público
+  // 🌍 canal público
   if (alertsChannel) {
-    await alertsChannel.send({
-      embeds: [embed]
-    });
+    await alertsChannel.send({ embeds: [embed] });
   }
 }
 
-// ================= HEARTBEAT HANDLER =================
+// ================= HEARTBEAT =================
 client.on("messageCreate", async (msg) => {
+  if (msg.author.bot) return;
   if (msg.channel.id !== HEARTBEAT_CHANNEL_ID) return;
   if (!msg.content) return;
 
@@ -142,6 +146,7 @@ client.on("messageCreate", async (msg) => {
     lastStates[user.name] = new Set();
   }
 
+  // 🚨 detectar nuevas caídas
   for (const instance of nowOffline) {
     if (!lastStates[user.name].has(instance)) {
       const isMain = instance === "main";
@@ -152,10 +157,11 @@ client.on("messageCreate", async (msg) => {
     }
   }
 
-  // limpiar cuando vuelven online
-  const stillOffline = new Set(nowOffline);
+  // 🔄 limpiar cuando vuelven online
+  const currentSet = new Set(nowOffline);
+
   lastStates[user.name].forEach(inst => {
-    if (!stillOffline.has(inst)) {
+    if (!currentSet.has(inst)) {
       lastStates[user.name].delete(inst);
     }
   });
@@ -163,7 +169,7 @@ client.on("messageCreate", async (msg) => {
 
 // ================= READY =================
 client.once("ready", async () => {
-  console.log(`Bot listo como ${client.user.tag}`);
+  console.log(`🚀 Bot listo: ${client.user.tag}`);
   await loadUsers();
 });
 
