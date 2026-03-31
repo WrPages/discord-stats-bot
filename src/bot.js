@@ -268,30 +268,30 @@ const globalEmbed = new EmbedBuilder()
   .setColor(0xF1C40F)
   .setDescription(
 
-    // 🔥 PPM GRANDE
+    // 🔥 PPM
     `# ⚡ ${global.totalPPM} PPM\n` +
     `📉 Avg: ${cachedAvgPPM}\n\n` +
 
-    // 🔹 FILA 1 (3 columnas)
-    col(`👥 Users\n${global.users}`) +
-    col(`📦 Packs\n${global.totalPacks}`) +
-    `⚡ Avg/User\n${global.avgPPM}\n\n` +
+    // 🔹 USERS / PACKS / AVG USER
+    col(`👥 Users`) + col(`📦 Packs`) + `⚡ Avg/User\n` +
+    col(`${global.users}`) + col(`${global.totalPacks}`) + `${global.avgPPM}\n\n` +
 
-    // 🔹 FILA 2 (2 columnas)
-    col(`🔥 Instances\n${global.totalInstances}`) +
-    `📊 Avg\n${global.avgInstances}\n\n` +
+    // 🔹 INSTANCES
+    col(`🔥 Instances`) + `📊 Avg\n` +
+    col(`${global.totalInstances}`) + `${global.avgInstances}\n\n` +
 
-    // 🔹 FILA 3 (2 columnas)
-    col(`🎯 GP/h\n${global.gpPerHour}`) +
-    `⏱ Min/GP\n${global.minutesToGP}\n\n` +
+    // 🔹 GP RATE
+    col(`🎯 GP/h`) + `⏱ Min/GP\n` +
+    col(`${global.gpPerHour}`) + `${global.minutesToGP}\n\n` +
 
-    // 🔥 GP SECTION (como tarjetas)
-    col(`🌟 GP Today\n**${gp.todayGP}**\n💖 ${gp.todayAlive}`) +
-    `💫 Total (5d)\n**${gp.totalGP}**\n💖 ${gp.totalAlive}\n\n` +
+    // 🔥 GP SECTION (BIEN ALINEADO)
+    col(`🌟 GP Today`) + `💫 Total (5d)\n` +
+    col(`**${gp.todayGP}**`) + `**${gp.totalGP}**\n` +
+    col(`💖 ${gp.todayAlive}`) + `💖 ${gp.totalAlive}\n\n` +
 
-    // 📅 HISTORIAL
+    // 📅 HISTORY
     `📅 Last 5 Days\n` +
-    `${gp.historyText}\n`
+    `${gp.historyText}`
   );
 
   return [usersEmbed, globalEmbed];
