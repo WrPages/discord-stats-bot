@@ -260,10 +260,6 @@ async function generatePanel() {
     );
 
   // 🔥 PANEL 2 (DASHBOARD REAL)
-const globalEmbed = new EmbedBuilder()
-  .setTitle("📊 Global Stats")
-  .setColor(0xF1C40F)
-  .setDescription(
 `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
 `# ⚡ ${global.totalPPM} PPM\n` +
@@ -282,9 +278,6 @@ const globalEmbed = new EmbedBuilder()
 
 `📅 **Last 5 Days**\n` +
 `${gp.historyText}\n\n` +
-
-`╚════════════════════════════════════╝`
-  );
 
   return [usersEmbed, globalEmbed];
 }
