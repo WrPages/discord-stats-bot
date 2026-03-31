@@ -238,7 +238,7 @@ async function generatePanel() {
 
       onlineList.push(
         `⚔️ **${user.name}**\n` +
-        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 ${onlineCount} | 💤 ${offlineCount}`
+        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🖥️ ${onlineCount} | 💤 ${offlineCount}`
       );
     } else {
       offlineList.push(
