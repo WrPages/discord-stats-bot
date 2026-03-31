@@ -172,7 +172,7 @@ function findLastUserMessage(messages, username) {
     return firstLine === name;
   });
 }
-  const name = username.toLowerCase().trim();
+ // const name = username.toLowerCase().trim();
 
 
 
