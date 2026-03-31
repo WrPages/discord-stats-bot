@@ -338,8 +338,9 @@ onlineList.push(
       value: gp.historyText,
       inline: true
     }
-
-  );
+   )
+  ];
+  }
 
 
 
