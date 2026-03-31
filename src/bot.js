@@ -261,12 +261,14 @@ async function generatePanel() {
     if (isOnline) {
       onlineStats.push(stats);
 
-   // contar instancias (sin main)
+
+// contar instancias (sin main)
 const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
 const offlineCount = stats.offline.includes("none") ? 0 : stats.offline.length;
 
 onlineList.push(
-  `⚔️ **${user.name}** | ⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 on-${onlineCount} | 💤 off-${offlineCount}`
+  `⚔️ **${user.name}**\n` +
+  `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 ${onlineCount} | 💤 ${offlineCount}`
 );
     } else {
       offlineList.push(
@@ -283,7 +285,7 @@ onlineList.push(
       .setTitle("Elite Four Statistics")
       .setColor(0x5865F2)
       .addFields(
-        { name: "🟢 ACTIVE", value: onlineList.join("\n\n") || "-" },
+        { name: "🟢 ACTIVE", value: onlineList.join("\n") || "-" },
         { name: "🔴 INACTIVE", value: offlineList.join("\n") || "-" }
       ),
 
