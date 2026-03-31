@@ -280,68 +280,58 @@ const colValue = (text) => col(text, 12); // 👈 más ancho para centrar númer
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0x00D1FF)
-  .setDescription(
-    `# ⚡ ${global.totalPPM} PPM\n📉 Avg: ${cachedAvgPPM}`
-  )
+
   .addFields(
 
     // 🔹 FILA 1
     {
-      name: "👥 Users",
-      value: `\n**${global.users}**\n`,
+      name: "👥 Rerollers",
+      value: `**${global.users}**`,
       inline: true
     },
     {
-      name: "📦 Packs",
-      value: `\n**${global.totalPacks}**\n`,
+      name: "🖥 Instances",
+      value: `**${global.totalInstances}/${global.maxInstances || 59}**`,
       inline: true
     },
     {
-      name: "⚡ Avg/User",
-      value: `\n**${global.avgPPM}**\n`,
+      name: "⚖️ Avg. Instances",
+      value: `**${global.avgInstances}**`,
       inline: true
     },
 
     // 🔹 FILA 2
     {
-      name: "🔥 Instances",
-      value: `\n**${global.totalInstances}**\n`,
+      name: "⚡ Packs / Min",
+      value: `**${global.totalPPM}**`,
       inline: true
     },
     {
-      name: "📊 Avg Instances",
-      value: `\n**${global.avgInstances}**\n`,
+      name: "⏱ Packs / Hour",
+      value: `**${(global.totalPPM * 60).toLocaleString()}**`,
       inline: true
     },
     {
-      name: "🎯 GP/h",
-      value: `\n**${global.gpPerHour}**\n`,
+      name: "📊 Avg. PPH",
+      value: `**${cachedAvgPPM}**`,
       inline: true
     },
 
     // 🔹 FILA 3
     {
-      name: "⏱ Min/GP",
-      value: `\n**${global.minutesToGP}**\n`,
+      name: "📦 Group 24h Packs",
+      value: `**${global.totalPacks}**`,
       inline: true
     },
     {
-      name: "🌟 GP Today",
-      value: `\n**${gp.todayGP}**\n💖 ${gp.todayAlive}\n`,
+      name: "🌈 Live GPs 24h",
+      value: `**${gp.todayGP}**`,
       inline: true
     },
     {
-      name: "💫 Total (5d)",
-      value: `\n**${gp.totalGP}**\n💖 ${gp.totalAlive}\n`,
+      name: "\u200B", // 👈 IMPORTANTE (relleno para mantener formato)
+      value: "\u200B",
       inline: true
-    }
-
-  )
-  .addFields(
-    {
-      name: "📅 Last 5 Days",
-      value: `${gp.historyText || "No data"}`,
-      inline: false
     }
   );
 
