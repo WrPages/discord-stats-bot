@@ -259,7 +259,11 @@ async function generatePanel() {
       `🔴 **Offline**\n${offlineList.join("\n") || "None"}`
     );
 
-  // 🔥 PANEL 2 (DASHBOARD REAL)
+// 🔥 PANEL 2 (DASHBOARD REAL)
+const globalEmbed = new EmbedBuilder()
+  .setTitle("📊 Global Stats")
+  .setColor(0xF1C40F)
+  .setDescription(
 `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
 `# ⚡ ${global.totalPPM} PPM\n` +
