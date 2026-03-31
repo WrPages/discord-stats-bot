@@ -37,26 +37,6 @@ async function fetchJSON(url) {
   return res.data;
 }
 
-async function fetchGPStats() {
-  try {
-    const res = await fetch(`${GP_GIST_URL}?t=${Date.now()}`);
-    const data = await res.json();
-
-    return {
-      todayGP: data.totalGP || 0,
-      todayAlive: data.totalAlive || 0,
-      history: data.history || []
-    };
-  } catch (err) {
-    console.error("Error fetching GP stats:", err);
-    return {
-      todayGP: 0,
-      todayAlive: 0,
-      history: []
-    };
-  }
-}
-
 async function fetchOnlineIDs(url) {
   const res = await axios.get(url);
   return res.data.split("\n").map(x => x.trim()).filter(Boolean);
@@ -111,14 +91,13 @@ async function refreshAveragePPM() {
 // 🧠 GP
 async function getGPStats() {
   try {
-const data = await fetchJSON(`${gpUrl}?t=${Date.now()}`);
+    const data = await fetchJSON(`${gpUrl}?t=${Date.now()}`);
 
     const todayGP = data.daily?.gp || 0;
-const todayAlive = data.daily?.alive || 0;
+    const todayAlive = data.daily?.alive || 0;
 
     const history = data.history || [];
 
-    // 🔥 CALCULAR TOTALES DINÁMICOS
     let totalGP = todayGP;
     let totalAlive = todayAlive;
 
@@ -127,7 +106,6 @@ const todayAlive = data.daily?.alive || 0;
       totalAlive += day.alive || 0;
     }
 
-    // 🔥 FORMATO DE FECHA
     const formatDate = (dateStr) => {
       const date = new Date(dateStr);
       const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -135,7 +113,6 @@ const todayAlive = data.daily?.alive || 0;
       return `${m}/${d}`;
     };
 
-    // 🔥 ÚLTIMOS 5 DÍAS (orden correcto)
     const last5 = history.slice(0, 5);
 
     const historyText = last5.map(d =>
@@ -166,10 +143,6 @@ const todayAlive = data.daily?.alive || 0;
 function cleanList(str) {
   if (!str) return [];
   return str.split(",").map(x => x.trim()).filter(Boolean);
-}
-
-function formatList(arr) {
-  return arr.length ? arr.join(" • ") : "-";
 }
 
 function parseStats(content) {
@@ -227,7 +200,6 @@ function calculateGlobalStats(onlineStats) {
     totalInstances,
     avgInstances: Math.round(users ? totalInstances / users : 0),
     totalPacks,
-    ppmPerInstance: totalInstances ? (totalPPM / totalInstances).toFixed(2) : "0.00",
     users,
     minutesToGP: totalPPM ? (2000 / totalPPM).toFixed(1) : "0",
     gpPerHour: totalPPM ? (60 / (2000 / totalPPM)).toFixed(2) : "0.00"
@@ -261,15 +233,13 @@ async function generatePanel() {
     if (isOnline) {
       onlineStats.push(stats);
 
+      const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
+      const offlineCount = stats.offline.includes("none") ? 0 : stats.offline.length;
 
-// contar instancias (sin main)
-const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
-const offlineCount = stats.offline.includes("none") ? 0 : stats.offline.length;
-
-onlineList.push(
-  `⚔️ **${user.name}**\n` +
-  `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 ${onlineCount} | 💤 ${offlineCount}`
-);
+      onlineList.push(
+        `⚔️ **${user.name}**\n` +
+        `⚡ ${stats.ppm} | 🧧 ${stats.packs} | ⏱ ${stats.time} | 🔥 ${onlineCount} | 💤 ${offlineCount}`
+      );
     } else {
       offlineList.push(
         `💤 **${user.name}** | 🧧 ${stats.packs} | ⏱ ${stats.time}`
@@ -280,74 +250,65 @@ onlineList.push(
   const global = calculateGlobalStats(onlineStats);
   const gp = await getGPStats();
 
-  return [
+  // 🔥 PANEL 1 (NO TOCADO)
+  const usersEmbed = new EmbedBuilder()
+    .setTitle("👥 Users Stats")
+    .setColor(0x2ECC71)
+    .setDescription(
+      `🟢 **Online**\n${onlineList.join("\n") || "None"}\n\n` +
+      `🔴 **Offline**\n${offlineList.join("\n") || "None"}`
+    );
+
+  // 🔥 PANEL 2 (MEJORADO)
   const globalEmbed = new EmbedBuilder()
-  .setTitle("📊 Global Stats")
-  .setColor(0xF1C40F)
-  .addFields(
-    {
-      name: "⚡ PPM",
-      value:
-        `# **${global.totalPPM}**\n` +
-        `📉 Avg: **${cachedAvgPPM}**`,
-      inline: true
-    },
-    {
-      name: "👥 Activity",
-      value:
-        `Users: **${global.users}**\n` +
-        `🧧 Packs: **${global.totalPacks}**\n` +
-        `⚡ Avg/User: **${global.avgPPM}**`,
-      inline: true
-    },
+    .setTitle("📊 Global Stats")
+    .setColor(0xF1C40F)
+    .addFields(
+      {
+        name: "⚡ PPM",
+        value: `# **${global.totalPPM}**\n📉 Avg: **${cachedAvgPPM}**`,
+        inline: true
+      },
+      {
+        name: "👥 Activity",
+        value:
+          `Users: **${global.users}**\n` +
+          `🧧 Packs: **${global.totalPacks}**\n` +
+          `⚡ Avg/User: **${global.avgPPM}**`,
+        inline: true
+      },
+      { name: "\u200B", value: "\u200B", inline: false },
+      {
+        name: "🔥 Instances",
+        value:
+          `Total: **${global.totalInstances}**\n` +
+          `Avg: **${global.avgInstances}**`,
+        inline: true
+      },
+      {
+        name: "🎯 GP Prediction",
+        value:
+          `⏱ ${global.minutesToGP} min/GP\n` +
+          `🚀 ${global.gpPerHour} GP/h`,
+        inline: true
+      },
+      { name: "\u200B", value: "\u200B", inline: false },
+      {
+        name: "🎯 GP Stats",
+        value:
+          `Today:\n# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
+          `Total (5d):\n${gp.totalGP} GP\n💖 ${gp.totalAlive}`,
+        inline: true
+      },
+      {
+        name: "📅 Last 5 Days",
+        value: gp.historyText,
+        inline: true
+      }
+    );
 
-    { name: "\u200B", value: "\u200B", inline: false },
-
-    {
-      name: "🔥 Instances",
-      value:
-        `Total: **${global.totalInstances}**\n` +
-        `Avg: **${global.avgInstances}**`,
-      inline: true
-    },
-    {
-      name: "🎯 GP Prediction",
-      value:
-        `⏱ ${global.minutesToGP} min/GP\n` +
-        `🚀 ${global.gpPerHour} GP/h`,
-      inline: true
-    },
-
-    { name: "\u200B", value: "\u200B", inline: false },
-
-    {
-      name: "🎯 GP Stats",
-      value:
-        `Today:\n# **${gp.todayGP}**\n💖 ${gp.todayAlive}\n\n` +
-        `Total (5d):\n${gp.totalGP} GP\n💖 ${gp.totalAlive}`,
-      inline: true
-    },
-    {
-      name: "📅 Last 5 Days",
-      value: gp.historyText,
-      inline: true
-    }
-  );
-
-// 🔥 TU PANEL DE USUARIOS (EL QUE DESAPARECIÓ)
-const usersEmbed = new EmbedBuilder()
-  .setTitle("👥 Users Stats")
-  .setColor(0x2ECC71)
-  .setDescription(
-    `🟢 **Online**\n${onlineList.join("\n") || "None"}\n\n` +
-    `🔴 **Offline**\n${offlineList.join("\n") || "None"}`
-  );
-
-// 🔥 RETORNAR AMBOS
-return [globalEmbed, usersEmbed];
-  }
-
-
+  return [usersEmbed, globalEmbed];
+}
 
 // 🚀 START
 client.once('ready', async () => {
@@ -359,21 +320,18 @@ client.once('ready', async () => {
 
   const embeds = await generatePanel();
 
-  // 🔍 Buscar mensaje existente del bot
   const messages = await channel.messages.fetch({ limit: 20 });
 
   panelMessage = messages.find(
     msg =>
       msg.author.id === client.user.id &&
       msg.embeds.length > 0 &&
-msg.embeds.some(e => e.title === "📊 Global Stats")
+      msg.embeds.some(e => e.title === "📊 Global Stats")
   );
 
   if (panelMessage) {
-    console.log("♻️ Panel encontrado, editando...");
     await panelMessage.edit({ embeds });
   } else {
-    console.log("🆕 Panel no encontrado, creando...");
     panelMessage = await channel.send({ embeds });
   }
 
