@@ -262,13 +262,7 @@ async function generatePanel() {
 // 🔥 PANEL 2 (DASHBOARD REAL)
 // 🔧 helper para columnas
 // 🔧 FUNCIONES AUXILIARES (ponlas arriba)
-const col = (text, width = 22) => {
-  const len = text.length;
-  const space = width - len;
-  const left = Math.floor(space / 2);
-  const right = space - left;
-  return " ".repeat(left) + text + " ".repeat(right);
-};
+
 
 
 // 🔥 PANEL 2 (tu dashboard)
