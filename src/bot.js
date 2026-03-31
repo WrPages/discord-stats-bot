@@ -160,12 +160,21 @@ function parseStats(content) {
 }
 
 function findLastUserMessage(messages, username) {
-  const name = username.toLowerCase();
+  const name = username.toLowerCase().trim();
 
   return messages.find(m => {
-    const firstLine = m.content.split("\n")[0]?.toLowerCase().trim();
-function findLastUserMessage(messages, username) {
+    const firstLine = m.content
+      .split("\n")[0]
+      ?.toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
+    return firstLine === name;
+  });
+}
   const name = username.toLowerCase().trim();
+
+
 
   return messages.find(m => {
     const firstLine = m.content
