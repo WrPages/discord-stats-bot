@@ -281,12 +281,10 @@ onlineList.push(
   const gp = await getGPStats();
 
   return [
-  new EmbedBuilder()
+  const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
   .addFields(
-
-    // 🔥 FILA 1
     {
       name: "⚡ PPM",
       value:
@@ -303,10 +301,8 @@ onlineList.push(
       inline: true
     },
 
-    // 🔻 SALTO
     { name: "\u200B", value: "\u200B", inline: false },
 
-    // 🔥 FILA 2
     {
       name: "🔥 Instances",
       value:
@@ -322,10 +318,8 @@ onlineList.push(
       inline: true
     },
 
-    // 🔻 SALTO
     { name: "\u200B", value: "\u200B", inline: false },
 
-    // 🔥 FILA 3 (GP COUNTER)
     {
       name: "🎯 GP Stats",
       value:
@@ -338,8 +332,19 @@ onlineList.push(
       value: gp.historyText,
       inline: true
     }
-   )
-  ];
+  );
+
+// 🔥 TU PANEL DE USUARIOS (EL QUE DESAPARECIÓ)
+const usersEmbed = new EmbedBuilder()
+  .setTitle("👥 Users Stats")
+  .setColor(0x2ECC71)
+  .setDescription(
+    `🟢 **Online**\n${onlineList.join("\n") || "None"}\n\n` +
+    `🔴 **Offline**\n${offlineList.join("\n") || "None"}`
+  );
+
+// 🔥 RETORNAR AMBOS
+return [globalEmbed, usersEmbed];
   }
 
 
