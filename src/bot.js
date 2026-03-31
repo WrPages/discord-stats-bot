@@ -278,8 +278,8 @@ const globalEmbed = new EmbedBuilder()
 
 `#🎯 **GP today**. ${gp.todayGP} **ALIVE**.  ${gp.todayAlive}\n` +
 `#🎯 **TOTAL (5d)**. ${gp.totalGP}. **ALIVE**.  ${gp.totalAlive} \`🎯 **GP Today**              🎯 **TOTAL (5d)**\n` +
-`# ${gp.todayGP}                    # ${gp.totalGP}\n` +
-`💖 ${gp.todayAlive}                💖 ${gp.totalAlive}\n\n`
+`# 🎯 GP Today: ${gp.todayGP}   💖 Alive: ${gp.todayAlive}\n` +
+`# 📦 Total (5d): ${gp.totalGP}   💖 Alive: ${gp.totalAlive}\n\n`
 
 
 
