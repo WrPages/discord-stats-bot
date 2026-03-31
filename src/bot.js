@@ -310,7 +310,7 @@ const globalEmbed = new EmbedBuilder()
       inline: true
     },
     {
-      name: "📊 Inst/Avg",
+      name: "📊 Avg/Inst",
       value: `**${global.avgInstances}**`,
       inline: true
     },
