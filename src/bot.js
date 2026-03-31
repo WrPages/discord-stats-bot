@@ -260,59 +260,26 @@ async function generatePanel() {
     );
 
   // 🔥 PANEL 2 (DASHBOARD REAL)
-  const globalEmbed = new EmbedBuilder()
-    .setTitle("📊 Global Stats")
-    .setColor(0xF1C40F)
-    .addFields(
+ const globalEmbed = new EmbedBuilder()
+  .setTitle("📊 Global Stats")
+  .setColor(0xF1C40F)
+  .setDescription(
+    `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-      {
-        name: "⚡ PPM",
-        value: `# **${global.totalPPM}**\n📉 Avg: **${cachedAvgPPM}**`,
-        inline: true
-      },
-      {
-        name: "👥 Activity",
-        value:
-          `👤 Users: **${global.users}**\n` +
-          `🧧 Packs: **${global.totalPacks}**\n` +
-          `⚡ Avg/User: **${global.avgPPM}**`,
-        inline: true
-      },
+    `⚡ **PPM:** ${global.totalPPM}        👥 **Users:** ${global.users}\n` +
+    `📉 Avg: ${cachedAvgPPM}        🧧 Packs: ${global.totalPacks}\n\n` +
 
-      { name: "\u200B", value: "\u200B", inline: false },
+    `🔥 **Instances:** ${global.totalInstances}        🎯 **GP/h:** ${global.gpPerHour}\n` +
+    `📊 Avg: ${global.avgInstances}        ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
-      {
-        name: "🔥 Instances",
-        value:
-          `Total: **${global.totalInstances}**\n` +
-          `Avg: **${global.avgInstances}**`,
-        inline: true
-      },
-      {
-        name: "🎯 GP Prediction",
-        value:
-          `⏱ **${global.minutesToGP} min/GP**\n` +
-          `🚀 **${global.gpPerHour} GP/h**`,
-        inline: true
-      },
+    `🎯 **GP TODAY:** ${gp.todayGP}        💖 ${gp.todayAlive}\n` +
+    `📦 **TOTAL (5d):** ${gp.totalGP}        💖 ${gp.totalAlive}\n\n` +
 
-      { name: "\u200B", value: "\u200B", inline: false },
+    `📅 **Last 5 Days**\n` +
+    `${gp.historyText}\n\n` +
 
-      {
-        name: "🎯 GP Counter",
-        value:
-          `Today: **${gp.todayGP}**\n` +
-          `💖 ${gp.todayAlive}\n\n` +
-          `Total(5d): **${gp.totalGP}**\n` +
-          `💖 ${gp.totalAlive}`,
-        inline: true
-      },
-      {
-        name: "📅 Last 5 Days",
-        value: gp.historyText,
-        inline: true
-      }
-    );
+    `╚════════════════════════════════════╝`
+  );
 
   return [usersEmbed, globalEmbed];
 }
