@@ -168,8 +168,7 @@ function findLastUserMessage(messages, username) {
   });
 }
 
-async function fetchMessagesByHours(channel, 
-messages.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+async function fetchMessagesByHours(channel, hours) {
   let all = [];
   let lastId = null;
   const limit = Date.now() - hours * 3600000;
@@ -185,6 +184,9 @@ messages.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 
     lastId = msgs.last().id;
   }
+
+  // 🔥 ordenar correctamente (IMPORTANTE)
+  return all.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 }
 
 // 📊 GLOBAL
@@ -228,7 +230,8 @@ function calculateGlobalStats(onlineStats) {
 // 📊 PANEL
 async function generatePanel() {
   const users = await fetchJSON(statsUrl);
-  const onlineIDs = await fetchOnlineIDs(onlineUrl);
+const onlineIDsRaw = await fetchOnlineIDs(onlineUrl);
+const onlineIDs = new Set(onlineIDsRaw.map(id => id.replace(/\D/g, "")));
   const channel = await client.channels.fetch(heartbeatChannelId);
 
   const messages = await fetchMessagesByHours(channel, 12);
@@ -240,8 +243,8 @@ async function generatePanel() {
   for (const key in users) {
 const user = {
   ...users[key],
-  main_id: String(users[key].main_id || "").trim().toLowerCase(),
-  sec_id: String(users[key].sec_id || "").trim().toLowerCase()
+  main_id: String(users[key].main_id || "").replace(/\D/g, ""),
+  sec_id: String(users[key].sec_id || "").replace(/\D/g, "")
 };
 
  const isOnline =
