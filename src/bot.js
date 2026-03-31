@@ -164,9 +164,21 @@ function findLastUserMessage(messages, username) {
 
   return messages.find(m => {
     const firstLine = m.content.split("\n")[0]?.toLowerCase().trim();
+function findLastUserMessage(messages, username) {
+  const name = username.toLowerCase().trim();
+
+  return messages.find(m => {
+    const firstLine = m.content
+      .split("\n")[0]
+      ?.toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
     return firstLine === name;
   });
 }
+
+
 
 async function fetchMessagesByHours(channel, hours) {
   let all = [];
@@ -247,9 +259,9 @@ const user = {
   sec_id: String(users[key].sec_id || "").replace(/\D/g, "")
 };
 
- const isOnline =
-  onlineIDs.includes(user.main_id) ||
-  (user.sec_id && onlineIDs.includes(user.sec_id));
+const isOnline =
+  onlineIDs.has(user.main_id) ||
+  (user.sec_id && onlineIDs.has(user.sec_id));
 
     const msg = findLastUserMessage(messages, user.name);
     if (!msg) continue;
