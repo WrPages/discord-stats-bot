@@ -273,7 +273,18 @@ const isOnline =
 
 const recentMsg = findLastUserMessage(recentMessages, user.name);
 const msg = findLastUserMessage(messages, user.name);
-    if (!msg) continue;
+
+let stats = {
+  time: "0",
+  packs: 0,
+  ppm: 0,
+  online: [],
+  offline: []
+};
+
+if (msg) {
+  stats = parseStats(msg.content);
+}
 
     const stats = parseStats(msg.content);
 
@@ -281,11 +292,7 @@ const msg = findLastUserMessage(messages, user.name);
   stats.online.length > 0 &&
   !stats.online.includes("none");
 
-const isRecentlyActive = recentMsg && (
-  Date.now() - recentMsg.createdTimestamp < 10 * 60 * 1000
-);
-
-if (isOnline && isRecentlyActive) {
+if (isOnline) {
       onlineStats.push(stats);
 
       const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
