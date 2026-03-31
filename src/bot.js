@@ -266,7 +266,7 @@ async function generatePanel() {
 
 
 // 🔥 PANEL 2 (tu dashboard)
-const col = (text, width = 20) => {
+const col = (text, width = 10) => {
   const len = text.length;
   const space = width - len;
   const left = Math.floor(space / 2);
@@ -274,8 +274,8 @@ const col = (text, width = 20) => {
   return " ".repeat(left) + text + " ".repeat(right);
 };
 
-const colTitle = (text) => col(text, 20);
-const colValue = (text) => col(text, 24); // 👈 más ancho para centrar números
+const colTitle = (text) => col(text, 11);
+const colValue = (text) => col(text, 12); // 👈 más ancho para centrar números
 
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
