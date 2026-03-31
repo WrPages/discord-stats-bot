@@ -260,23 +260,24 @@ async function generatePanel() {
     );
 
   // 🔥 PANEL 2 (DASHBOARD REAL)
- const globalEmbed = new EmbedBuilder()
+const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
   .setDescription(
     `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-    `⚡ **PPM:** ${global.totalPPM}        👥 **Users:** ${global.users}\n` +
-    `📉 Avg: ${cachedAvgPPM}        🧧 Packs: ${global.totalPacks}\n\n` +
+    `⚡ **PPM:** ${global.totalPPM}             👥 **Users:** ${global.users}\n` +
+    `📉 Avg: ${cachedAvgPPM}                    🧧 Packs: ${global.totalPacks}\n` +
+    `⚡ Avg/User: ${global.avgPPM}\n\n` +
 
-    `🔥 **Instances:** ${global.totalInstances}        🎯 **GP/h:** ${global.gpPerHour}\n` +
-    `📊 Avg: ${global.avgInstances}        ⏱ Min/GP: ${global.minutesToGP}\n\n` +
+    `🔥 **Instances:** ${global.totalInstances} 🎯 **GP/h:** ${global.gpPerHour}\n` +
+    `📊 Avg: ${global.avgInstances}             ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
-    `🎯 **GP TODAY:** ${gp.todayGP}        💖 ${gp.todayAlive}\n` +
-    `📦 **TOTAL (5d):** ${gp.totalGP}        💖 ${gp.totalAlive}\n\n` +
+    `🎯 **GP TODAY:** ${gp.todayGP}             📅 **Last 5 Days**\n` +
+    `💖 ${gp.todayAlive}                         ${gp.historyText}\n\n` +
 
-    `📅 **Last 5 Days**\n` +
-    `${gp.historyText}\n\n` +
+    `📦 **TOTAL (5d):** ${gp.totalGP}\n` +
+    `💖 ${gp.totalAlive}\n\n` +
 
     `╚════════════════════════════════════╝`
   );
