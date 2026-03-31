@@ -281,20 +281,68 @@ const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0x00D1FF)
   .setDescription(
-`\`\`\`
-👥 Users        📦 Packs        ⚡ Avg/User
-${global.users}        ${global.totalPacks}        ${global.avgPPM}
+    `# ⚡ ${global.totalPPM} PPM\n📉 Avg: ${cachedAvgPPM}`
+  )
+  .addFields(
 
-🔥 Instances    📊 Avg          🎯 GP/h
-${global.totalInstances}        ${global.avgInstances}        ${global.gpPerHour}
+    // 🔹 FILA 1
+    {
+      name: "👥 Users",
+      value: `\n**${global.users}**\n`,
+      inline: true
+    },
+    {
+      name: "📦 Packs",
+      value: `\n**${global.totalPacks}**\n`,
+      inline: true
+    },
+    {
+      name: "⚡ Avg/User",
+      value: `\n**${global.avgPPM}**\n`,
+      inline: true
+    },
 
-⏱ Min/GP       🌟 GP Today     💫 Total (5d)
-${global.minutesToGP}        ${gp.todayGP} (${gp.todayAlive})        ${gp.totalGP} (${gp.totalAlive})
-\`\`\`
+    // 🔹 FILA 2
+    {
+      name: "🔥 Instances",
+      value: `\n**${global.totalInstances}**\n`,
+      inline: true
+    },
+    {
+      name: "📊 Avg Instances",
+      value: `\n**${global.avgInstances}**\n`,
+      inline: true
+    },
+    {
+      name: "🎯 GP/h",
+      value: `\n**${global.gpPerHour}**\n`,
+      inline: true
+    },
 
-📅 Last 5 Days
-${gp.historyText}
-`
+    // 🔹 FILA 3
+    {
+      name: "⏱ Min/GP",
+      value: `\n**${global.minutesToGP}**\n`,
+      inline: true
+    },
+    {
+      name: "🌟 GP Today",
+      value: `\n**${gp.todayGP}**\n💖 ${gp.todayAlive}\n`,
+      inline: true
+    },
+    {
+      name: "💫 Total (5d)",
+      value: `\n**${gp.totalGP}**\n💖 ${gp.totalAlive}\n`,
+      inline: true
+    }
+
+  )
+  .addFields(
+    {
+      name: "📅 Last 5 Days",
+      value: `${gp.historyText || "No data"}`,
+      inline: false
+    }
   );
 
 return [usersEmbed, globalEmbed];
