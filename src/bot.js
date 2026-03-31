@@ -265,7 +265,7 @@ const globalEmbed = new EmbedBuilder()
   .setColor(0xF1C40F)
   .setDescription(
     `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
-          `# ⚡ ${global.totalPPM} PPM\n`
+          `# ⚡ ${global.totalPPM} PPM\n`+
     `⚡ **PPM:** ${global.totalPPM}  👥 **Users:** ${global.users}\n` +
     `📉 Avg: ${cachedAvgPPM}         🧧 Packs: ${global.totalPacks}\n` +
     `⚡ Avg/User: ${global.avgPPM}\n\n` +
