@@ -5,6 +5,7 @@
   "main": "src/bot.js",
   "scripts": {
     "start": "node src/bot.js"
+        "start": "node src/alerts.js"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
