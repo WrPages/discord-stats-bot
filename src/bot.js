@@ -279,28 +279,62 @@ const colValue = (text) => col(text, 12); // 👈 más ancho para centrar númer
 
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
-  .setColor(0xF1C40F)
-  .setDescription(
-    `# ⚡ ${global.totalPPM} PPM\n📉 Avg: ${cachedAvgPPM}`
-  )
+  .setColor(0x00D1FF) // puedes cambiar color
   .addFields(
 
-    { name: "👥 Users", value: `**${global.users}**`, inline: true },
-    { name: "📦 Packs", value: `**${global.totalPacks}**`, inline: true },
-    { name: "⚡ Avg/User", value: `**${global.avgPPM}**`, inline: true },
+    // 🔹 FILA 1
+    {
+      name: "👥 Users",
+      value: `\`\`\`\n${global.users}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "📦 Packs",
+      value: `\`\`\`\n${global.totalPacks}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "⚡ Avg/User",
+      value: `\`\`\`\n${global.avgPPM}\n\`\`\``,
+      inline: true
+    },
 
-    { name: "🔥 Instances", value: `**${global.totalInstances}**`, inline: true },
-    { name: "📊 Avg", value: `**${global.avgInstances}**`, inline: true },
-    { name: "\u200B", value: "\u200B", inline: true }, // 👈 relleno para cuadrar
+    // 🔹 FILA 2
+    {
+      name: "🔥 Instances",
+      value: `\`\`\`\n${global.totalInstances}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "📊 Avg Instances",
+      value: `\`\`\`\n${global.avgInstances}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "🎯 GP/h",
+      value: `\`\`\`\n${global.gpPerHour}\n\`\`\``,
+      inline: true
+    },
 
-    { name: "🎯 GP/h", value: `**${global.gpPerHour}**`, inline: true },
-    { name: "⏱ Min/GP", value: `**${global.minutesToGP}**`, inline: true },
-    { name: "\u200B", value: "\u200B", inline: true },
+    // 🔹 FILA 3
+    {
+      name: "⏱ Min/GP",
+      value: `\`\`\`\n${global.minutesToGP}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "🌟 GP Today",
+      value: `\`\`\`\n${gp.todayGP}\n💖 ${gp.todayAlive}\n\`\`\``,
+      inline: true
+    },
+    {
+      name: "💫 Total (5d)",
+      value: `\`\`\`\n${gp.totalGP}\n💖 ${gp.totalAlive}\n\`\`\``,
+      inline: true
+    }
 
-    { name: "🌟 GP Today", value: `**${gp.todayGP}**\n💖 ${gp.todayAlive}`, inline: true },
-    { name: "💫 Total (5d)", value: `**${gp.totalGP}**\n💖 ${gp.totalAlive}`, inline: true }
-
-  );
+  )
+  .setFooter({ text: "Last 5 Days" })
 
 return [usersEmbed, globalEmbed];
 }
