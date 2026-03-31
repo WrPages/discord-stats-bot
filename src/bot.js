@@ -255,7 +255,7 @@ const onlineIDs = new Set(onlineIDsRaw.map(id => id.replace(/\D/g, "")));
   const channel = await client.channels.fetch(heartbeatChannelId);
 
   const messages = await fetchMessagesByHours(channel, 12);
-
+const recentMessages = await fetchMessagesByHours(channel, 0.25); // 15 min
   let onlineList = [];
   let offlineList = [];
   let onlineStats = [];
@@ -271,7 +271,8 @@ const isOnline =
   onlineIDs.has(user.main_id) ||
   (user.sec_id && onlineIDs.has(user.sec_id));
 
-    const msg = findLastUserMessage(messages, user.name);
+const recentMsg = findLastUserMessage(recentMessages, user.name);
+const msg = findLastUserMessage(messages, user.name);
     if (!msg) continue;
 
     const stats = parseStats(msg.content);
@@ -280,7 +281,11 @@ const isOnline =
   stats.online.length > 0 &&
   !stats.online.includes("none");
 
-if (isOnline || hasOnlineInstances) {
+const isRecentlyActive = recentMsg && (
+  Date.now() - recentMsg.createdTimestamp < 10 * 60 * 1000
+);
+
+if (isOnline && isRecentlyActive) {
       onlineStats.push(stats);
 
       const onlineCount = stats.online.filter(x => x.toLowerCase() !== "main").length;
