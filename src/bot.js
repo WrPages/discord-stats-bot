@@ -272,6 +272,17 @@ const col = (text, width = 22) => {
 
 
 // 🔥 PANEL 2 (tu dashboard)
+const col = (text, width = 22) => {
+  const len = text.length;
+  const space = width - len;
+  const left = Math.floor(space / 2);
+  const right = space - left;
+  return " ".repeat(left) + text + " ".repeat(right);
+};
+
+const colTitle = (text) => col(text, 22);
+const colValue = (text) => col(text, 26); // 👈 más ancho para centrar números
+
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
@@ -280,20 +291,28 @@ const globalEmbed = new EmbedBuilder()
     `# ⚡ ${global.totalPPM} PPM\n` +
     `📉 Avg: ${cachedAvgPPM}\n\n` +
 
-    col(`👥 Users`) + col(`📦 Packs`) + col(`⚡ Avg/User`) + `\n` +
-    col(`${global.users}`) + col(`${global.totalPacks}`) + col(`${global.avgPPM}`) + `\n\n` +
+    "```" +
 
-    col(`🔥 Instances`) + col(`📊 Avg`) + `\n` +
-    col(`${global.totalInstances}`) + col(`${global.avgInstances}`) + `\n\n` +
+    // 🔹 FILA 1
+    colTitle(`👥 Users`) + colTitle(`📦 Packs`) + colTitle(`⚡ Avg/User`) + "\n" +
+    colValue(`${global.users}`) + colValue(`${global.totalPacks}`) + colValue(`${global.avgPPM}`) + "\n\n" +
 
-    col(`🎯 GP/h`) + col(`⏱ Min/GP`) + `\n` +
-    col(`${global.gpPerHour}`) + col(`${global.minutesToGP}`) + `\n\n` +
+    // 🔹 FILA 2
+    colTitle(`🔥 Instances`) + colTitle(`📊 Avg`) + "\n" +
+    colValue(`${global.totalInstances}`) + colValue(`${global.avgInstances}`) + "\n\n" +
 
-    col(`🌟 GP Today`) + col(`💫 Total (5d)`) + `\n` +
-    col(`**${gp.todayGP}**`) + col(`**${gp.totalGP}**`) + `\n` +
-    col(`💖 ${gp.todayAlive}`) + col(`💖 ${gp.totalAlive}`) + `\n\n` +
+    // 🔹 FILA 3
+    colTitle(`🎯 GP/h`) + colTitle(`⏱ Min/GP`) + "\n" +
+    colValue(`${global.gpPerHour}`) + colValue(`${global.minutesToGP}`) + "\n\n" +
 
-    `📅 Last 5 Days\n` +
+    // 🔥 GP SECTION
+    colTitle(`🌟 GP Today`) + colTitle(`💫 Total (5d)`) + "\n" +
+    colValue(`${gp.todayGP}`) + colValue(`${gp.totalGP}`) + "\n" +
+    colValue(`💖 ${gp.todayAlive}`) + colValue(`💖 ${gp.totalAlive}`) +
+
+    "```" +
+
+    `\n\n📅 Last 5 Days\n` +
     `${gp.historyText}`
   );
 
