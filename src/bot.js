@@ -316,7 +316,7 @@ const globalEmbed = new EmbedBuilder()
 
     {
       name: "🔥 Instances",
-      value: `**${global.totalInstances}**`,
+value: `**${global.instancesDisplay}**`,
       inline: true
     },
     {
