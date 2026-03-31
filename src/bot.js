@@ -298,6 +298,7 @@ const globalEmbed = new EmbedBuilder()
   );
 
 return [usersEmbed, globalEmbed];
+}
 
 // 🚀 START
 client.once('ready', async () => {
