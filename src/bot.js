@@ -261,41 +261,43 @@ async function generatePanel() {
 
 // 🔥 PANEL 2 (DASHBOARD REAL)
 // 🔧 helper para columnas
-const col = (text, space = 22) => text.padEnd(space, " ");
+// 🔧 FUNCIONES AUXILIARES (ponlas arriba)
+const col = (text, width = 22) => {
+  const len = text.length;
+  const space = width - len;
+  const left = Math.floor(space / 2);
+  const right = space - left;
+  return " ".repeat(left) + text + " ".repeat(right);
+};
 
+
+// 🔥 PANEL 2 (tu dashboard)
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
   .setDescription(
 
-    // 🔥 PPM
     `# ⚡ ${global.totalPPM} PPM\n` +
     `📉 Avg: ${cachedAvgPPM}\n\n` +
 
-    // 🔹 USERS / PACKS / AVG USER
-    col(`👥 Users`) + col(`📦 Packs`) + `⚡ Avg/User\n` +
-    col(`${global.users}`) + col(`${global.totalPacks}`) + `${global.avgPPM}\n\n` +
+    col(`👥 Users`) + col(`📦 Packs`) + col(`⚡ Avg/User`) + `\n` +
+    col(`${global.users}`) + col(`${global.totalPacks}`) + col(`${global.avgPPM}`) + `\n\n` +
 
-    // 🔹 INSTANCES
-    col(`🔥 Instances`) + `📊 Avg\n` +
-    col(`${global.totalInstances}`) + `${global.avgInstances}\n\n` +
+    col(`🔥 Instances`) + col(`📊 Avg`) + `\n` +
+    col(`${global.totalInstances}`) + col(`${global.avgInstances}`) + `\n\n` +
 
-    // 🔹 GP RATE
-    col(`🎯 GP/h`) + `⏱ Min/GP\n` +
-    col(`${global.gpPerHour}`) + `${global.minutesToGP}\n\n` +
+    col(`🎯 GP/h`) + col(`⏱ Min/GP`) + `\n` +
+    col(`${global.gpPerHour}`) + col(`${global.minutesToGP}`) + `\n\n` +
 
-    // 🔥 GP SECTION (BIEN ALINEADO)
-    col(`🌟 GP Today`) + `💫 Total (5d)\n` +
-    col(`**${gp.todayGP}**`) + `**${gp.totalGP}**\n` +
-    col(`💖 ${gp.todayAlive}`) + `💖 ${gp.totalAlive}\n\n` +
+    col(`🌟 GP Today`) + col(`💫 Total (5d)`) + `\n` +
+    col(`**${gp.todayGP}**`) + col(`**${gp.totalGP}**`) + `\n` +
+    col(`💖 ${gp.todayAlive}`) + col(`💖 ${gp.totalAlive}`) + `\n\n` +
 
-    // 📅 HISTORY
     `📅 Last 5 Days\n` +
     `${gp.historyText}`
   );
 
-  return [usersEmbed, globalEmbed];
-}
+return [usersEmbed, globalEmbed];
 
 // 🚀 START
 client.once('ready', async () => {
