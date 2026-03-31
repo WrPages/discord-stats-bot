@@ -265,22 +265,32 @@ const globalEmbed = new EmbedBuilder()
   .setColor(0xF1C40F)
   .setDescription(
 
-              `# ⚡ ${global.totalPPM} PPM. \n` +
+    // 🔥 PPM GRANDE SOLO ARRIBA
+    `# ⚡ ${global.totalPPM}\n` +
+    `📉 Avg PPM: ${cachedAvgPPM}\n\n` +
 
-                `📉 Avg: ${cachedAvgPPM}\n\n` +
+    // 🔹 BLOQUE 1
+    `👥 **Users**\n${global.users}\n\n` +
+    `📦 **Packs/12h**\n${global.totalPacks}\n\n` +
 
-`👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n` +
+    // 🔹 BLOQUE 2 (lado "derecho" simulado)
+    `⚡ **Avg PPM/User**\n${global.avgPPM}\n\n` +
 
-`🔥 **Instances:** ${global.totalInstances}    📊 Avg/Instance: ${global.avgInstances}\n` +
+    // 🔹 BLOQUE 3
+    `🔥 **Instances**\n${global.totalInstances}/${global.avgInstances}\n\n` +
 
-`🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
+    // 🔹 BLOQUE 4
+    `🎯 **GP/h**\n${global.gpPerHour}\n\n` +
+    `⏱ **Min/GP**\n${global.minutesToGP}\n\n` +
 
-`🌟GP Today ${"**" + gp.todayGP + "**"}   💖 Alive ${"**" + gp.todayAlive + "**"}   \n` +
-`💫Total (5d) ${"**" + gp.totalGP + "**"} 💖 Alive ${"**" + gp.totalAlive + "**"}\n\n`+
+    // 🔥 GP SECTION LIMPIO
+    `━━━━━━━━━━━━━━\n` +
+    `🌟 **GP Today:** **${gp.todayGP}**   💖 ${gp.todayAlive}\n` +
+    `💫 **Total (5d):** **${gp.totalGP}**   💖 ${gp.totalAlive}\n\n` +
 
-
-  `📅 **Last 5 Days**\n` +
-    `${gp.historyText}\n\n` 
+    // 📅 HISTORIAL
+    `📅 **Last 5 Days**\n` +
+    `${gp.historyText}\n`
   );
 
   return [usersEmbed, globalEmbed];
