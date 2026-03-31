@@ -276,8 +276,11 @@ async function generatePanel() {
 `💖 ${gp.todayAlive}                💖 ${gp.totalAlive}\n\n` +
 
 
-`📅 **Last 5 Days**\n` +
-`${gp.historyText}\n\n` +
+  `📅 **Last 5 Days**\n` +
+    `${gp.historyText}\n\n` +
+
+    `╚════════════════════════════════════╝`
+  );
 
   return [usersEmbed, globalEmbed];
 }
