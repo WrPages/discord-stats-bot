@@ -265,19 +265,22 @@ const globalEmbed = new EmbedBuilder()
   .setColor(0xF1C40F)
   .setDescription(
     `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
-          `# ⚡ ${global.totalPPM} PPM\n`+
-          `. 📉 Avg: ${cachedAvgPPM} 
-          
-`👥 **Users:** ${global.users} 🧧 Packs: ${global.totalPacks} ⚡ Avg/User: ${global.avgPPM}\n\n` +
-`🔥 **Instances:** ${global.totalInstances} 📊 Avg: ${global.avgInstances}\n\n`+
-`🎯 **GP/h:** ${global.gpPerHour}  ⏱ Min/GP: ${global.minutesToGP}\n\n` +
-              `🎯 **GP TODAY:**+
-          `#${gp.todayGP} +
-          `💖 ${gp.todayAlive} \n\n+
-          
-  `📦 **TOTAL (5d):** ${gp.totalGP}\n` +
-    `💖 ${gp.totalAlive}\n\n` +
 
+    `# ⚡ ${global.totalPPM} PPM\n` +
+    `📉 Avg: ${cachedAvgPPM}\n\n` +
+
+    `👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n\n` +
+
+    `🔥 **Instances:** ${global.totalInstances}    📊 Avg: ${global.avgInstances}\n\n` +
+
+    `🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
+
+    `🎯 **GP TODAY:**\n` +
+    `# ${gp.todayGP}\n` +
+    `💖 ${gp.todayAlive}\n\n` +
+
+    `📦 **TOTAL (5d):** ${gp.totalGP}\n` +
+    `💖 ${gp.totalAlive}\n\n` +
 
     `📅 **Last 5 Days**\n` +
     `${gp.historyText}\n\n` +
