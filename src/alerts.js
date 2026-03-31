@@ -2,182 +2,191 @@
 
 const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
 const axios = require("axios");
+const DISCORD_T
 
-// ================= CONFIG =================
-const DISCORD_TOKEN = process.env.LATIOS_TOKEN;
 
-const HEARTBEAT_CHANNEL_ID = "1483616146996465735";
-const ALERTS_CHANNEL_ID = "1484015417411244082";
-const CATEGORY_ID = "1488253270068691045"; // opcional pero recomendado
-
-const USERS_GIST_ID = "bb18eda2ea748723d8fe0131dd740b70";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-
-const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
+const { 
+  Client, 
+  GatewayIntentBits, 
+  PermissionsBitField, 
+  ChannelType 
+} = require("discord.js");
 const axios = require("axios");
 
-
-
-// ================= CLIENT =================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
   ]
 });
 
-// ================= DATA =================
-let usersMap = [];
-let lastStates = {};
+// ================= CONFIG =================
 
-// ================= LOAD USERS =================
-async function loadUsers() {
+const DISCORD_TOKEN =  process.env.LATIOS_TOKEN;;
+const HEARTBEAT_CHANNEL_ID = 1483616146996465735;
+const GIST_ID = bb18eda2ea748723d8fe0131dd740b70;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const CATEGORY_NAME =Personal_channel || "REROLL USERS";
+
+// ===========================================
+
+// ======== Obtener usuarios desde Gist ========
+async function fetchEliteUsers() {
   try {
-    const res = await axios.get(USERS_GIST_URL);
-    const data = res.data;
+    const response = await axios.get(
+      `https://api.github.com/gists/${GIST_ID}`,
+      {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`
+        }
+      }
+    );
 
-    usersMap = Object.entries(data).map(([discordId, user]) => ({
-      discord_id: discordId,
-      name: user.name,
-      main_id: user.main_id,
-      sec_id: user.sec_id
-    }));
+    const files = response.data.files;
+    const fileName = Object.keys(files)[0];
+    const content = files[fileName].content;
 
-    console.log("✅ Usuarios cargados:", usersMap.length);
-  } catch (err) {
-    console.error("❌ Error cargando users:", err);
+    return JSON.parse(content);
+
+  } catch (error) {
+    console.error("❌ Error obteniendo Gist:", error.message);
+    return null;
   }
 }
 
-// ================= PARSER =================
-function parseMessage(content) {
-  console.log("📩 Mensaje recibido:\n", content);
-
-  return {
-    name: content.split("\n")[0].trim(),
-    online: content.match(/Online:\s(.+)/)?.[1]?.split(",").map(x => x.trim()) || [],
-    offline: content.match(/Offline:\s(.+)/)?.[1]?.split(",").map(x => x.trim()) || []
-  };
+// ======== Buscar usuario por nombre ========
+function findUserByName(eliteUsers, username) {
+  for (const discordId in eliteUsers) {
+    if (eliteUsers[discordId].name === username) {
+      return discordId;
+    }
+  }
+  return null;
 }
 
-// ================= CANAL PRIVADO =================
-async function getUserChannel(guild, user) {
+// ======== Crear categoría si no existe ========
+async function getOrCreateCategory(guild) {
+  let category = guild.channels.cache.find(
+    c => c.name === CATEGORY_NAME && c.type === ChannelType.GuildCategory
+  );
+
+  if (!category) {
+    console.log("📁 Creando categoría...");
+    category = await guild.channels.create({
+      name: CATEGORY_NAME,
+      type: ChannelType.GuildCategory
+    });
+  }
+
+  return category;
+}
+
+// ======== Crear canal privado ========
+async function getOrCreatePrivateChannel(guild, userId) {
+
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) {
+    console.log("⚠ Usuario no está en el servidor");
+    return null;
+  }
+
+  const channelName = `reroll-${member.user.username.toLowerCase()}`;
+
   let channel = guild.channels.cache.find(
-    c => c.name === `user-${user.discord_id}`
+    c => c.name === channelName
   );
 
   if (channel) return channel;
 
-  console.log("📁 Creando canal para:", user.name);
+  const category = await getOrCreateCategory(guild);
 
-  const championRole = guild.roles.cache.find(
-    r => r.name.toLowerCase() === "champion"
-  );
+  const championRole = guild.roles.cache.find(r => r.name === "Champion");
+
+  const permissionOverwrites = [
+    {
+      id: guild.id,
+      deny: [PermissionsBitField.Flags.ViewChannel]
+    },
+    {
+      id: userId,
+      allow: [PermissionsBitField.Flags.ViewChannel]
+    }
+  ];
+
+  if (championRole) {
+    permissionOverwrites.push({
+      id: championRole.id,
+      allow: [PermissionsBitField.Flags.ViewChannel]
+    });
+  }
+
+  console.log(`📨 Creando canal para ${member.user.username}`);
 
   channel = await guild.channels.create({
-    name: `user-${user.discord_id}`,
+    name: channelName,
     type: ChannelType.GuildText,
-    parent: CATEGORY_ID,
-    permissionOverwrites: [
-      {
-        id: guild.id,
-        deny: [PermissionsBitField.Flags.ViewChannel]
-      },
-      {
-        id: user.discord_id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages
-        ]
-      },
-      ...(championRole ? [{
-        id: championRole.id,
-        allow: [PermissionsBitField.Flags.ViewChannel]
-      }] : [])
-    ]
+    parent: category.id,
+    permissionOverwrites
   });
 
   return channel;
 }
 
-// ================= ALERTA =================
-async function sendAlert(guild, user, instance, isMain) {
-  console.log("🚨 ALERTA:", user.name, instance);
+// ================= EVENTOS =================
 
-  const alertsChannel = guild.channels.cache.get(ALERTS_CHANNEL_ID);
-  const userChannel = await getUserChannel(guild, user);
-
-  const embed = new EmbedBuilder()
-    .setTitle(isMain ? "🔴 MAIN OFFLINE" : "🟠 INSTANCE OFFLINE")
-    .setDescription(`**${user.name}** → ${instance}`)
-    .setColor(isMain ? 0xFF0000 : 0xFFA500)
-    .setTimestamp();
-
-  await userChannel.send({
-    content: `<@${user.discord_id}>`,
-    embeds: [embed]
-  });
-
-  if (alertsChannel) {
-    await alertsChannel.send({ embeds: [embed] });
-  } else {
-    console.log("❌ Canal de alertas no encontrado");
-  }
-}
-
-// ================= HEARTBEAT =================
-client.on("messageCreate", async (msg) => {
-  console.log("📩 EVENTO DETECTADO:", msg.content);
-  console.log("📡 CANAL RECIBIDO:", msg.channel.id);
-  console.log("🎯 CANAL ESPERADO:", HEARTBEAT_CHANNEL_ID);
-
-  if (msg.author.bot) return;
-
-  // 👇 deja esto para probar
+client.once("ready", () => {
+  console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
-  if (msg.author.bot) return;
 
-  console.log("📡 Canal:", msg.channel.id);
+client.on("messageCreate", async (message) => {
 
-  if (msg.channel.id !== HEARTBEAT_CHANNEL_ID) return;
+  try {
+    if (message.author.bot) return;
+    if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
 
-  console.log("✅ Mensaje del canal correcto");
+    if (!message.content) return;
 
-  const data = parseMessage(msg.content);
+    const lines = message.content.split("\n");
+    const username = lines[0].trim();
 
-  const user = usersMap.find(
-    u => u.name.toLowerCase() === data.name.toLowerCase()
-  );
+    if (!username) return;
 
-  if (!user) {
-    console.log("❌ Usuario no encontrado:", data.name);
-    return;
-  }
+    console.log("🔍 Username detectado:", username);
 
-  console.log("👤 Usuario detectado:", user.name);
+    const eliteUsers = await fetchEliteUsers();
+    if (!eliteUsers) return;
 
-  const nowOffline = data.offline
-    .map(x => x.toLowerCase())
-    .filter(x => x !== "none");
+    const discordId = findUserByName(eliteUsers, username);
 
-  if (!lastStates[user.name]) {
-    lastStates[user.name] = new Set();
-  }
-
-  for (const inst of nowOffline) {
-    if (!lastStates[user.name].has(inst)) {
-      await sendAlert(msg.guild, user, inst, inst === "main");
-      lastStates[user.name].add(inst);
+    if (!discordId) {
+      console.log("⚠ Usuario no registrado:", username);
+      return;
     }
-  }
-});
 
-// ================= READY =================
-client.once("ready", async () => {
-  console.log(`🚀 Bot listo: ${client.user.tag}`);
-  await loadUsers();
+    const guild = message.guild;
+
+    const privateChannel = await getOrCreatePrivateChannel(guild, discordId);
+    if (!privateChannel) return;
+
+    await privateChannel.send({
+      content: `📦 **Nuevo Heartbeat Detectado**\n\n${message.content}`
+    });
+
+    console.log(`✅ Mensaje reenviado a ${username}`);
+
+  } catch (error) {
+    console.error("❌ Error procesando mensaje:", error);
+  }
+
 });
 
 // ================= LOGIN =================
+
+if (!DISCORD_TOKEN) {
+  console.error("❌ DISCORD_TOKEN no está definido en Railway");
+  process.exit(1);
+}
+
 client.login(DISCORD_TOKEN);
