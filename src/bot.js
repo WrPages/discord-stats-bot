@@ -277,6 +277,10 @@ const col = (text, width = 10) => {
 const colTitle = (text) => col(text, 11);
 const colValue = (text) => col(text, 12); // 👈 más ancho para centrar números
 
+function pad(value, width = 12) {
+  return String(value).padStart(width, " ");
+}
+
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0x00D1FF)
@@ -286,28 +290,28 @@ const globalEmbed = new EmbedBuilder()
       name: "\u200B",
       value:
         `👥 **Users**      │ 📦 **Packs**      │ ⚡ **Avg/User**\n` +
-        `\`${global.users}\`           │ \`${global.totalPacks}\`         │ \`${global.avgPPM}\``,
+        `\`${pad(global.users)}\` │ \`${pad(global.totalPacks)}\` │ \`${pad(global.avgPPM)}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `🔥 **Instances**  │ 📊 **Avg Inst.**  │ 🎯 **GP/h**\n` +
-        `\`${global.totalInstances}\`     │ \`${global.avgInstances}\`        │ \`${global.gpPerHour}\``,
+        `\`${pad(global.totalInstances)}\` │ \`${pad(global.avgInstances)}\` │ \`${pad(global.gpPerHour)}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `⏱ **Min/GP**     │ 🌟 **Today GP**   │ 💫 **Total (5d)**\n` +
-        `\`${global.minutesToGP}\`      │ \`${gp.todayGP}\`             │ \`${gp.totalGP}\``,
+        `\`${pad(global.minutesToGP)}\` │ \`${pad(gp.todayGP)}\` │ \`${pad(gp.totalGP)}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `💖 **Alive Today** │ 💖 **Alive Total** │ \u200B\n` +
-        `\`${gp.todayAlive}\`        │ \`${gp.totalAlive}\`        │ \u200B`,
+        `\`${pad(gp.todayAlive)}\` │ \`${pad(gp.totalAlive)}\` │ \u200B`,
       inline: false
     },
 
