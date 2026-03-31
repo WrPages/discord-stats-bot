@@ -285,36 +285,29 @@ const globalEmbed = new EmbedBuilder()
     {
       name: "\u200B",
       value:
-        `👥 **Users**        │ 📦 **Packs**\n` +
-        `\`${global.users}\`             │ \`${global.totalPacks}\``,
+        `👥 **Users**      │ 📦 **Packs**      │ ⚡ **Avg/User**\n` +
+        `\`${global.users}\`           │ \`${global.totalPacks}\`         │ \`${global.avgPPM}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
-        `⚡ **Avg/User**    │ 🔥 **Instances**\n` +
-        `\`${global.avgPPM}\`           │ \`${global.totalInstances}\``,
+        `🔥 **Instances**  │ 📊 **Avg Inst.**  │ 🎯 **GP/h**\n` +
+        `\`${global.totalInstances}\`     │ \`${global.avgInstances}\`        │ \`${global.gpPerHour}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
-        `📊 **Avg Inst.**   │ 🎯 **GP/h**\n` +
-        `\`${global.avgInstances}\`      │ \`${global.gpPerHour}\``,
+        `⏱ **Min/GP**     │ 🌟 **Today GP**   │ 💫 **Total (5d)**\n` +
+        `\`${global.minutesToGP}\`      │ \`${gp.todayGP}\`             │ \`${gp.totalGP}\``,
       inline: false
     },
     {
       name: "\u200B",
       value:
-        `⏱ **Min/GP**      │ 🌟 **Today GP**\n` +
-        `\`${global.minutesToGP}\`       │ \`${gp.todayGP}\``,
-      inline: false
-    },
-    {
-      name: "\u200B",
-      value:
-        `💫 **Total (5d)** │ 💖 **Alive**\n` +
-        `\`${gp.totalGP}\`          │ \`${gp.totalAlive}\``,
+        `💖 **Alive Today** │ 💖 **Alive Total** │ \u200B\n` +
+        `\`${gp.todayAlive}\`        │ \`${gp.totalAlive}\`        │ \u200B`,
       inline: false
     },
 
