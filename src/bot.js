@@ -310,14 +310,14 @@ const globalEmbed = new EmbedBuilder()
       name: "\u200B",
       value:
         `⏱ **Min/GP**     │ 🌟 **Today GP**   │ 💫 **Total (5d)**\n` +
- `${pad(global.minutesToGP)}      ${pad(gp.todayGP)}   ${pad(gp.totalGP)}`,
+ `${pad(global.minutesToGP)}         ${pad(gp.todayGP)}            ${pad(gp.totalGP)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `💖 **Alive Today** │ 💖 **Alive Total** │ \u200B\n` +
-`${pad(gp.todayAlive)}          ${pad(gp.totalAlive)} │ `,
+`${pad(gp.todayAlive)}                 ${pad(gp.totalAlive)}   `,
       inline: false
     },
 
