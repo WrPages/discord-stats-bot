@@ -295,29 +295,29 @@ const globalEmbed = new EmbedBuilder()
     {
       name: "\u200B",
       value:
-        `👥 **Users**      │ 🧧 **Packs**      │ ⚡ **Avg/User**\n` +
-`${pad(global.users)}      ${pad(global.totalPacks)}  ${pad(global.avgPPM)}`,
+        `👥.  **Users**        🧧 **Packs**           ⚡ **Avg/User**\n` +
+`${pad(global.users)}      ${pad(global.totalPacks)}            ${pad(global.avgPPM)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
- `🔥 **Instances**       📊 **Avg Inst.**    🎯 **GP/h**\n` +
-        `${pad(global.totalInstances)} │ ${pad(global.avgInstances)} │ ${pad(global.gpPerHour)}`,
+ `🔥 **Instances**       📊 **Avg Inst.**          🎯 **GP/h**\n` +
+        `${pad(global.totalInstances)}   ${pad(global.avgInstances)}         ${pad(global.gpPerHour)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
-        `⏱ **Min/GP**     │ 🌟 **Today GP**   │ 💫 **Total (5d)**\n` +
+        `⏱ **Min/GP**       🌟 **Today GP**     💫 **Total (5d)**\n` +
  `${pad(global.minutesToGP)}         ${pad(gp.todayGP)}            ${pad(gp.totalGP)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
-        `💖 **Alive Today** │ 💖 **Alive Total** │ \u200B\n` +
-`${pad(gp.todayAlive)}                 ${pad(gp.totalAlive)}   `,
+                            `💖 **Alive Today**   💖 **Alive Total**   \u200B\n` +
+                    `${pad(gp.todayAlive)}                 ${pad(gp.totalAlive)}   `,
       inline: false
     },
 
