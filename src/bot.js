@@ -281,33 +281,25 @@ const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
   .setDescription(
+    `# ⚡ ${global.totalPPM} PPM\n📉 Avg: ${cachedAvgPPM}`
+  )
+  .addFields(
 
-    `# ⚡ ${global.totalPPM} PPM\n` +
-    `📉 Avg: ${cachedAvgPPM}\n\n` +
+    { name: "👥 Users", value: `**${global.users}**`, inline: true },
+    { name: "📦 Packs", value: `**${global.totalPacks}**`, inline: true },
+    { name: "⚡ Avg/User", value: `**${global.avgPPM}**`, inline: true },
 
-    "```" +
+    { name: "🔥 Instances", value: `**${global.totalInstances}**`, inline: true },
+    { name: "📊 Avg", value: `**${global.avgInstances}**`, inline: true },
+    { name: "\u200B", value: "\u200B", inline: true }, // 👈 relleno para cuadrar
 
-    // 🔹 FILA 1
-    colTitle(`👥 Users`) + colTitle(`📦 Packs`) + colTitle(`⚡ Avg/User`) + "\n" +
-    colValue(`${global.users}`) + colValue(`${global.totalPacks}`) + colValue(`${global.avgPPM}`) + "\n\n" +
+    { name: "🎯 GP/h", value: `**${global.gpPerHour}**`, inline: true },
+    { name: "⏱ Min/GP", value: `**${global.minutesToGP}**`, inline: true },
+    { name: "\u200B", value: "\u200B", inline: true },
 
-    // 🔹 FILA 2
-    colTitle(`🔥 Instances`) + colTitle(`📊 Avg`) + "\n" +
-    colValue(`${global.totalInstances}`) + colValue(`${global.avgInstances}`) + "\n\n" +
+    { name: "🌟 GP Today", value: `**${gp.todayGP}**\n💖 ${gp.todayAlive}`, inline: true },
+    { name: "💫 Total (5d)", value: `**${gp.totalGP}**\n💖 ${gp.totalAlive}`, inline: true }
 
-    // 🔹 FILA 3
-    colTitle(`🎯 GP/h`) + colTitle(`⏱ Min/GP`) + "\n" +
-    colValue(`${global.gpPerHour}`) + colValue(`${global.minutesToGP}`) + "\n\n" +
-
-    // 🔥 GP SECTION
-    colTitle(`🌟 GP Today`) + colTitle(`💫 Total (5d)`) + "\n" +
-    colValue(`${gp.todayGP}`) + colValue(`${gp.totalGP}`) + "\n" +
-    colValue(`💖 ${gp.todayAlive}`) + colValue(`💖 ${gp.totalAlive}`) +
-
-    "```" +
-
-    `\n\n📅 Last 5 Days\n` +
-    `${gp.historyText}`
   );
 
 return [usersEmbed, globalEmbed];
