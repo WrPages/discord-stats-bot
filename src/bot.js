@@ -160,9 +160,16 @@ function parseStats(content) {
 }
 
 function findLastUserMessage(messages, username) {
-  const name = username.toLowerCase().trim();
+  if (!messages || !Array.isArray(messages)) return null;
+
+  const name = String(username || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
 
   return messages.find(m => {
+    if (!m || !m.content) return false;
+
     const firstLine = m.content
       .split("\n")[0]
       ?.toLowerCase()
@@ -170,8 +177,8 @@ function findLastUserMessage(messages, username) {
       .replace(/\s+/g, " ");
 
     return firstLine === name;
-  });
-}
+  }) || null;
+}}
  // const name = username.toLowerCase().trim();
 
 
