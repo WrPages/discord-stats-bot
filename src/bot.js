@@ -183,15 +183,7 @@ function findLastUserMessage(messages, username) {
 
 
 
-  return messages.find(m => {
-    const firstLine = m.content
-      .split("\n")[0]
-      ?.toLowerCase()
-      .trim()
-      .replace(/\s+/g, " ");
 
-    return firstLine === name;
-  });
 
 
 
