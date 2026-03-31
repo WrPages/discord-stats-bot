@@ -264,15 +264,14 @@ const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0xF1C40F)
   .setDescription(
-`╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-`# ⚡ ${global.totalPPM} PPM. \n` +
+              `# ⚡ ${global.totalPPM} PPM. \n` +
 
-`📉 Avg: ${cachedAvgPPM}\n\n` +
+                `📉 Avg: ${cachedAvgPPM}\n\n` +
 
 `👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n` +
 
-`🔥 **Instances:** ${global.totalInstances}    📊Inst.Avg: ${global.avgInstances}\n` +
+`🔥 **Instances:** ${global.totalInstances}    📊 Avg/Instance: ${global.avgInstances}\n` +
 
 `🎯 **GP/h:** ${global.gpPerHour}    ⏱ Min/GP: ${global.minutesToGP}\n\n` +
 
@@ -280,12 +279,8 @@ const globalEmbed = new EmbedBuilder()
 `💫Total (5d) ${"**" + gp.totalGP + "**"} 💖 Alive ${"**" + gp.totalAlive + "**"}\n\n`+
 
 
-
-
   `📅 **Last 5 Days**\n` +
     `${gp.historyText}\n\n` +
-
-    `╚════════════════════════════════════╝`
   );
 
   return [usersEmbed, globalEmbed];
