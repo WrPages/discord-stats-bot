@@ -285,7 +285,7 @@ onlineList.push(
       .setTitle("Elite Four Statistics")
       .setColor(0x5865F2)
       .addFields(
-        { name: "🟢 ACTIVE", value: onlineList.join("\n-\n") || "-" },
+        { name: "🟢 ACTIVE", value: onlineList.join("\n") || "-" },
         { name: "🔴 INACTIVE", value: offlineList.join("\n") || "-" }
       ),
 
