@@ -13,6 +13,11 @@ const CATEGORY_ID = "1488253270068691045"; // opcional pero recomendado
 const USERS_GIST_ID = "bb18eda2ea748723d8fe0131dd740b70";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
+const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, PermissionsBitField } = require("discord.js");
+const axios = require("axios");
+
+
+
 // ================= CLIENT =================
 const client = new Client({
   intents: [
@@ -28,21 +33,27 @@ let lastStates = {};
 
 // ================= LOAD USERS =================
 async function loadUsers() {
-  const res = await axios.get(USERS_GIST_URL);
-  const data = res.data;
+  try {
+    const res = await axios.get(USERS_GIST_URL);
+    const data = res.data;
 
-  usersMap = Object.entries(data).map(([discordId, user]) => ({
-    discord_id: discordId,
-    name: user.name,
-    main_id: user.main_id,
-    sec_id: user.sec_id
-  }));
+    usersMap = Object.entries(data).map(([discordId, user]) => ({
+      discord_id: discordId,
+      name: user.name,
+      main_id: user.main_id,
+      sec_id: user.sec_id
+    }));
 
-  console.log("✅ Usuarios cargados:", usersMap.length);
+    console.log("✅ Usuarios cargados:", usersMap.length);
+  } catch (err) {
+    console.error("❌ Error cargando users:", err);
+  }
 }
 
 // ================= PARSER =================
 function parseMessage(content) {
+  console.log("📩 Mensaje recibido:\n", content);
+
   return {
     name: content.split("\n")[0].trim(),
     online: content.match(/Online:\s(.+)/)?.[1]?.split(",").map(x => x.trim()) || [],
@@ -52,91 +63,91 @@ function parseMessage(content) {
 
 // ================= CANAL PRIVADO =================
 async function getUserChannel(guild, user) {
-  const existing = guild.channels.cache.find(
+  let channel = guild.channels.cache.find(
     c => c.name === `user-${user.discord_id}`
   );
 
-  if (existing) return existing;
+  if (channel) return channel;
 
-  // 🔍 buscar rol Champion por nombre
+  console.log("📁 Creando canal para:", user.name);
+
   const championRole = guild.roles.cache.find(
     r => r.name.toLowerCase() === "champion"
   );
 
-  return await guild.channels.create({
+  channel = await guild.channels.create({
     name: `user-${user.discord_id}`,
     type: ChannelType.GuildText,
     parent: CATEGORY_ID,
     permissionOverwrites: [
-      // ❌ oculto para todos
       {
         id: guild.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
-
-      // ✅ acceso usuario dueño
       {
         id: user.discord_id,
         allow: [
           PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory
+          PermissionsBitField.Flags.SendMessages
         ]
       },
-
-      // ✅ acceso rol Champion
       ...(championRole ? [{
         id: championRole.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory
-        ]
+        allow: [PermissionsBitField.Flags.ViewChannel]
       }] : [])
     ]
   });
+
+  return channel;
 }
 
-// ================= ALERTAS =================
+// ================= ALERTA =================
 async function sendAlert(guild, user, instance, isMain) {
+  console.log("🚨 ALERTA:", user.name, instance);
+
   const alertsChannel = guild.channels.cache.get(ALERTS_CHANNEL_ID);
   const userChannel = await getUserChannel(guild, user);
 
-  const color = isMain ? 0xE74C3C : 0xF39C12;
-
   const embed = new EmbedBuilder()
     .setTitle(isMain ? "🔴 MAIN OFFLINE" : "🟠 INSTANCE OFFLINE")
-    .setDescription(`Instancia **${instance}** de **${user.name}** está offline`)
-    .setColor(color)
+    .setDescription(`**${user.name}** → ${instance}`)
+    .setColor(isMain ? 0xFF0000 : 0xFFA500)
     .setTimestamp();
 
-  // 📩 canal privado (con mención)
   await userChannel.send({
     content: `<@${user.discord_id}>`,
     embeds: [embed]
   });
 
-  // 🌍 canal público
   if (alertsChannel) {
     await alertsChannel.send({ embeds: [embed] });
+  } else {
+    console.log("❌ Canal de alertas no encontrado");
   }
 }
 
 // ================= HEARTBEAT =================
 client.on("messageCreate", async (msg) => {
   if (msg.author.bot) return;
+
+  console.log("📡 Canal:", msg.channel.id);
+
   if (msg.channel.id !== HEARTBEAT_CHANNEL_ID) return;
-  if (!msg.content) return;
+
+  console.log("✅ Mensaje del canal correcto");
 
   const data = parseMessage(msg.content);
 
-  const normalize = (str) => str.toLowerCase();
-
   const user = usersMap.find(
-    u => normalize(u.name) === normalize(data.name)
+    u => u.name.toLowerCase() === data.name.toLowerCase()
   );
 
-  if (!user) return;
+  if (!user) {
+    console.log("❌ Usuario no encontrado:", data.name);
+    return;
+  }
+
+  console.log("👤 Usuario detectado:", user.name);
 
   const nowOffline = data.offline
     .map(x => x.toLowerCase())
@@ -146,25 +157,12 @@ client.on("messageCreate", async (msg) => {
     lastStates[user.name] = new Set();
   }
 
-  // 🚨 detectar nuevas caídas
-  for (const instance of nowOffline) {
-    if (!lastStates[user.name].has(instance)) {
-      const isMain = instance === "main";
-
-      await sendAlert(msg.guild, user, instance, isMain);
-
-      lastStates[user.name].add(instance);
+  for (const inst of nowOffline) {
+    if (!lastStates[user.name].has(inst)) {
+      await sendAlert(msg.guild, user, inst, inst === "main");
+      lastStates[user.name].add(inst);
     }
   }
-
-  // 🔄 limpiar cuando vuelven online
-  const currentSet = new Set(nowOffline);
-
-  lastStates[user.name].forEach(inst => {
-    if (!currentSet.has(inst)) {
-      lastStates[user.name].delete(inst);
-    }
-  });
 });
 
 // ================= READY =================
