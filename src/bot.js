@@ -261,7 +261,7 @@ async function generatePanel() {
 
 // 🔥 PANEL 2 (DASHBOARD REAL)
 // 🔧 helper para columnas
-const col = (text, space = 28) => text.padEnd(space, " ");
+const col = (text, space = 20) => text.padEnd(space, " ");
 
 const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
