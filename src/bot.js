@@ -266,7 +266,7 @@ const globalEmbed = new EmbedBuilder()
   .setDescription(
 `╔════════ ⚡ GLOBAL DASHBOARD ════════╗\n\n` +
 
-`# ⚡ ${global.totalPPM} PPM\n` +
+`# ⚡ ${global.totalPPM} PPM. **GP TODAY**${gp.todayGP}  \n` +
 `📉 Avg: ${cachedAvgPPM}\n\n` +
 
 `👥 **Users:** ${global.users}    🧧 Packs: ${global.totalPacks}    ⚡ Avg/User: ${global.avgPPM}\n` +
