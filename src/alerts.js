@@ -22,7 +22,7 @@ const HEARTBEAT_CHANNEL_ID = 1483616146996465735;
 
 const GIST_ID = process.env.GIST_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const CATEGORY_NAME = Personal_channel || "REROLL USERS";
+const CATEGORY_NAME = process.env.CATEGORY_NAME || "REROLL USERS";
 
 // ===========================================
 
