@@ -128,6 +128,14 @@ async function sendAlert(guild, user, instance, isMain) {
 
 // ================= HEARTBEAT =================
 client.on("messageCreate", async (msg) => {
+  console.log("📩 EVENTO DETECTADO:", msg.content);
+  console.log("📡 CANAL RECIBIDO:", msg.channel.id);
+  console.log("🎯 CANAL ESPERADO:", HEARTBEAT_CHANNEL_ID);
+
+  if (msg.author.bot) return;
+
+  // 👇 deja esto para probar
+});
   if (msg.author.bot) return;
 
   console.log("📡 Canal:", msg.channel.id);
