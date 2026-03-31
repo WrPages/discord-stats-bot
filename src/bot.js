@@ -285,33 +285,39 @@ const globalEmbed = new EmbedBuilder()
   .setTitle("📊 Global Stats")
   .setColor(0x00D1FF)
 
+  // 🔥 HEADER GRANDE
+  .setDescription(
+    `# ⚡ ${global.totalPPM} PPM\n` +
+    `📉 Avg (12h): ${cachedAvgPPM}`
+  )
+
   .addFields(
     {
       name: "\u200B",
       value:
         `👥 **Users**      │ 📦 **Packs**      │ ⚡ **Avg/User**\n` +
-        `\`${pad(global.users)}\` │ \`${pad(global.totalPacks)}\` │ \`${pad(global.avgPPM)}\``,
+        `${pad(global.users)} │ ${pad(global.totalPacks)} │ ${pad(global.avgPPM)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `🔥 **Instances**  │ 📊 **Avg Inst.**  │ 🎯 **GP/h**\n` +
-        `\`${pad(global.totalInstances)}\` │ \`${pad(global.avgInstances)}\` │ \`${pad(global.gpPerHour)}\``,
+        `${pad(global.totalInstances)} │ ${pad(global.avgInstances)} │ ${pad(global.gpPerHour)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `⏱ **Min/GP**     │ 🌟 **Today GP**   │ 💫 **Total (5d)**\n` +
-        `\`${pad(global.minutesToGP)}\` │ \`${pad(gp.todayGP)}\` │ \`${pad(gp.totalGP)}\``,
+        `${pad(global.minutesToGP)} │ ${pad(gp.todayGP)} │ ${pad(gp.totalGP)}`,
       inline: false
     },
     {
       name: "\u200B",
       value:
         `💖 **Alive Today** │ 💖 **Alive Total** │ \u200B\n` +
-        `\`${pad(gp.todayAlive)}\` │ \`${pad(gp.totalAlive)}\` │ \u200B`,
+        `${pad(gp.todayAlive)} │ ${pad(gp.totalAlive)} │ `,
       inline: false
     },
 
@@ -323,7 +329,6 @@ const globalEmbed = new EmbedBuilder()
   );
 
 return [usersEmbed, globalEmbed];
-}
 
 // 🚀 START
 client.once('ready', async () => {
