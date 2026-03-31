@@ -280,7 +280,7 @@ const globalEmbed = new EmbedBuilder()
 
 
   `📅 **Last 5 Days**\n` +
-    `${gp.historyText}\n\n` +
+    `${gp.historyText}\n\n` 
   );
 
   return [usersEmbed, globalEmbed];
