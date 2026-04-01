@@ -10,12 +10,13 @@ const ELITE_IDS_GIST_ID = 'd9db3a72fed74c496fd6cc830f9ca6e9';
 
 const GIST_USERS_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json';
 
-const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000; // 🔥 12 HOURS
+const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000;
 const CRASH_TIMEOUT = 45 * 60 * 1000;
+const UPDATE_INTERVAL = 10 * 60 * 1000; // update every 10 min
 
 const crashTimers = new Map();
 
-// ================= LOAD REGISTERED USERS =================
+// ================= LOAD USERS =================
 async function loadUsers() {
     const response = await fetch(GIST_USERS_URL);
     return await response.json();
@@ -36,7 +37,7 @@ async function loadEliteIDs() {
     };
 }
 
-// ================= REMOVE ID FROM ELITE IDS =================
+// ================= REMOVE IDS =================
 async function removeFromEliteIDs(gameId) {
     if (!gameId) return;
 
@@ -46,52 +47,42 @@ async function removeFromEliteIDs(gameId) {
     await axios.patch(
         `https://api.github.com/gists/${ELITE_IDS_GIST_ID}`,
         {
-            files: {
-                [fileName]: {
-                    content: newList.join('\n')
-                }
-            }
+            files: { [fileName]: { content: newList.join('\n') } }
         },
         { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } }
     );
 }
 
-// ================= PARSE OFFLINE =================
-function parseOffline(content) {
-    const match = content.match(/Offline:\s(.+)/i);
-    if (!match) return { count: 0, hasMain: false };
-
-    const list = match[1]
-        .split(',')
-        .map(x => x.trim().toLowerCase())
-        .filter(Boolean);
-
-    return {
-        count: list.filter(x => x !== 'main' && x !== 'none').length,
-        hasMain: list.includes('main')
-    };
-}
-
-// ================= CHECK ONLINE INSTANCES =================
-function noOnlineInstances(content) {
+// ================= PARSE ONLINE =================
+function getOnlineInstances(content) {
     const match = content.match(/Online:\s(.+)/i);
-    if (!match) return true;
+    if (!match) return [];
 
-    const list = match[1]
+    return match[1]
         .split(',')
         .map(x => x.trim().toLowerCase())
         .filter(Boolean);
-
-    return list.includes('none') || list.length === 0;
 }
 
-// ================= CLEAN OLD BOT MESSAGES =================
+// ================= INACTIVITY CHECK =================
+function isInactive(content) {
+    const online = getOnlineInstances(content);
+
+    if (online.includes('none') || online.length === 0) return true;
+
+    // remove main
+    const numericInstances = online.filter(x => x !== 'main');
+
+    // if only main active -> inactive
+    return numericInstances.length === 0;
+}
+
+// ================= CLEAN MESSAGES =================
 async function cleanOldMessages(client) {
     const now = Date.now();
 
     for (const guild of client.guilds.cache.values()) {
 
-        // 🔹 Personal channels
         const personalChannels = guild.channels.cache.filter(c =>
             c.isTextBased() && c.name.startsWith("personal-")
         );
@@ -109,7 +100,6 @@ async function cleanOldMessages(client) {
             }
         }
 
-        // 🔹 Public alert channel
         const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
 
         if (publicChannel) {
@@ -125,8 +115,6 @@ async function cleanOldMessages(client) {
             }
         }
     }
-
-    console.log("🧹 12h cleanup executed");
 }
 
 // ================= MODULE =================
@@ -182,7 +170,7 @@ module.exports = (client) => {
                 });
             }
 
-            // 🔕 Silent heartbeat
+            // Silent heartbeat
             await userChannel.send({
                 content:
                     `📡 **Heartbeat Update for ${userData.name}**\n\n` +
@@ -190,76 +178,70 @@ module.exports = (client) => {
                 flags: 4096
             });
 
-            // ================= VALIDATE ONLINE STATUS =================
-            const { ids } = await loadEliteIDs();
-            const isOnlineGame =
-                ids.includes(userData.main_id) ||
-                ids.includes(userData.sec_id);
-
             const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
-            const { count, hasMain } = parseOffline(content);
 
-            if (isOnlineGame) {
+            // ================= INACTIVITY DETECTOR =================
+            const inactive = isInactive(content);
 
-                if (count > 0) {
-                    const orange = new EmbedBuilder()
-                        .setColor(0xFFA500)
-                        .setDescription(
-                            `⚠️ ${member} You have **${count} offline instance${count > 1 ? 's' : ''}**.`
-                        );
-
-                    await userChannel.send({ embeds: [orange] });
-                    if (publicChannel) await publicChannel.send({ embeds: [orange] });
-                }
-
-                if (hasMain) {
-                    const red = new EmbedBuilder()
-                        .setColor(0xFF0000)
-                        .setDescription(
-                            `🚨 ${member} Your **MAIN instance is OFFLINE**.`
-                        );
-
-                    await userChannel.send({ embeds: [red] });
-                    if (publicChannel) await publicChannel.send({ embeds: [red] });
-                }
-            }
-
-            // ================= CRASH DETECTOR =================
-            const crashed = noOnlineInstances(content);
-
-            if (crashed) {
+            if (inactive) {
 
                 if (!crashTimers.has(discordId)) {
 
+                    let elapsed = 0;
+
                     await userChannel.send({
-                        content: `⏳ ${member} No active instances detected. Crash timer started (45 minutes).`,
+                        content: `⏳ ${member} No active numeric instances detected.\nInactivity timer started (45 minutes).`,
                         flags: 4096
                     });
 
-                    const timer = setTimeout(async () => {
+                    const interval = setInterval(async () => {
+                        elapsed += UPDATE_INTERVAL;
+
+                        const remaining = Math.max(0, (CRASH_TIMEOUT - elapsed) / 60000);
+
+                        await userChannel.send({
+                            content: `⏳ ${member} Inactivity countdown: **${remaining} minutes remaining**.`,
+                            flags: 4096
+                        });
+
+                    }, UPDATE_INTERVAL);
+
+                    const timeout = setTimeout(async () => {
+
+                        clearInterval(interval);
 
                         await removeFromEliteIDs(userData.main_id);
                         await removeFromEliteIDs(userData.sec_id);
 
-                        await userChannel.send(
-                            `🛑 ${member} No recovery detected. User automatically marked OFFLINE.`
-                        );
+                        const red = new EmbedBuilder()
+                            .setColor(0xFF0000)
+                            .setDescription(
+                                `🚨 ${member} has been set **OFFLINE due to inactivity**.`
+                            );
+
+                        await userChannel.send({ embeds: [red] });
+                        if (publicChannel) await publicChannel.send({ embeds: [red] });
 
                         crashTimers.delete(discordId);
 
                     }, CRASH_TIMEOUT);
 
-                    crashTimers.set(discordId, timer);
+                    crashTimers.set(discordId, { timeout, interval });
                 }
 
             } else {
 
                 if (crashTimers.has(discordId)) {
-                    clearTimeout(crashTimers.get(discordId));
+
+                    const { timeout, interval } = crashTimers.get(discordId);
+
+                    clearTimeout(timeout);
+                    clearInterval(interval);
+
                     crashTimers.delete(discordId);
 
                     await userChannel.send({
-                        content: `✅ ${member} Instances recovered. Crash detector cancelled.`,
+                        content: `✅ ${member} Activity detected. Inactivity timer cancelled.`,
                         flags: 4096
                     });
                 }
