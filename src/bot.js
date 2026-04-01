@@ -25,9 +25,11 @@ const panelChannelId = "1488126321786753156";
 
 // 🤖 CLIENT
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent]
 });
-alerts(client);
+require('./alerts')(client);
+
 let panelMessage = null;
 let lastTotalPPM = 0;
 let cachedAvgPPM = "0.00";
