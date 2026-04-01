@@ -8,23 +8,24 @@ const GIST_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8f
 
 async function loadUsers() {
     const response = await fetch(GIST_URL);
-    if (!response.ok) throw new Error('No se pudo cargar el Gist');
+    if (!response.ok) throw new Error('Failed to load Gist');
     return await response.json();
 }
 
 module.exports = (client) => {
 
-    console.log("✅ alerts.js cargado");
+    console.log("✅ alerts.js loaded");
 
     client.on('messageCreate', async (message) => {
 
         try {
 
+            // Only listen to heartbeat channel
             if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
 
-            console.log("👀 Heartbeat detectado");
+            console.log("👀 Heartbeat detected");
 
-            // Obtener contenido (texto o embed)
+            // Get content (text or embed)
             let content = message.content;
 
             if ((!content || content.trim() === "") && message.embeds.length > 0) {
@@ -37,26 +38,26 @@ module.exports = (client) => {
             if (!content) return;
 
             const firstLine = content.split('\n')[0].trim();
-            console.log("Nombre detectado:", firstLine);
+            console.log("Detected username:", firstLine);
 
             const registeredUsers = await loadUsers();
 
-            // 🔥 Buscar por nombre y obtener el ID (clave del JSON)
+            // Find user by name
             const entry = Object.entries(registeredUsers)
                 .find(([discordId, data]) =>
                     data.name.toLowerCase().trim() === firstLine.toLowerCase().trim()
                 );
 
             if (!entry) {
-                console.log("❌ Usuario no registrado");
+                console.log("❌ User not registered");
                 return;
             }
 
             const [discordId, userData] = entry;
-
             const guild = message.guild;
 
-            const channelName = `reroll-${userData.name
+            // 🔥 Channel name format
+            const channelName = `personal-${userData.name
                 .toLowerCase()
                 .replace(/\s+/g, '-')}`;
 
@@ -64,29 +65,32 @@ module.exports = (client) => {
                 c => c.name === channelName
             );
 
-            // 🔥 Si ya existe, solo enviar mensaje
+            // If channel already exists → just send message
             if (userChannel) {
                 await userChannel.send(
-                    `📡 **Nuevo Heartbeat:**\n\`\`\`\n${content}\n\`\`\``
+                    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
+                    `\`\`\`\n${content}\n\`\`\`\n` +
+                    `_This channel automatically tracks your reroll activity._`
                 );
-                console.log("📨 Mensaje enviado al canal existente");
+
+                console.log("📨 Sent to existing channel");
                 return;
             }
 
-            // 🔎 Verificar que el usuario esté en el servidor
+            // Check member exists
             const member = await guild.members.fetch(discordId).catch(() => null);
             if (!member) {
-                console.log("❌ El usuario no está en el servidor:", discordId);
+                console.log("❌ User not in server:", discordId);
                 return;
             }
 
             const championRole = guild.roles.cache.get(CHAMPION_ROLE_ID);
             if (!championRole) {
-                console.log("❌ Rol Champion no encontrado");
+                console.log("❌ Champion role not found");
                 return;
             }
 
-            console.log("📁 Creando canal para", userData.name);
+            console.log("📁 Creating personal channel for", userData.name);
 
             userChannel = await guild.channels.create({
                 name: channelName,
@@ -114,16 +118,18 @@ module.exports = (client) => {
                 ],
             });
 
-            console.log("✅ Canal creado");
+            console.log("✅ Channel created");
 
             await userChannel.send(
-                `📡 **Nuevo Heartbeat:**\n\`\`\`\n${content}\n\`\`\``
+                `📡 **Heartbeat Update for ${userData.name}**\n\n` +
+                `\`\`\`\n${content}\n\`\`\`\n` +
+                `_This channel automatically tracks your reroll activity._`
             );
 
-            console.log("📨 Mensaje enviado");
+            console.log("📨 First heartbeat sent");
 
         } catch (err) {
-            console.error('🔥 Error en alerts.js:', err);
+            console.error('🔥 Error in alerts.js:', err);
         }
     });
 
