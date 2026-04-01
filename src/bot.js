@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
-const alerts = require('./alerts');
+
 
 // 🔐 TOKENS
 const TOKEN = process.env.LATIOS_TOKEN;
@@ -29,7 +29,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent]
 });
-alerts(client);
+
 require('./alerts')(client);
 
 let panelMessage = null;
