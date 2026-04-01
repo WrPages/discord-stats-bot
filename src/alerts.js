@@ -6,26 +6,56 @@ const CHAMPION_ROLE_ID = '1486206362332434634';
 
 const GIST_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json';
 
+const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000; // 24h
+
 async function loadUsers() {
     const response = await fetch(GIST_URL);
     if (!response.ok) throw new Error('Failed to load Gist');
     return await response.json();
 }
 
+async function cleanOldMessages(client) {
+    const now = Date.now();
+
+    for (const guild of client.guilds.cache.values()) {
+
+        const channels = guild.channels.cache.filter(c =>
+            c.isTextBased() && c.name.startsWith("personal-")
+        );
+
+        for (const channel of channels.values()) {
+
+            const messages = await channel.messages.fetch({ limit: 100 });
+
+            for (const msg of messages.values()) {
+
+                if (now - msg.createdTimestamp > MESSAGE_LIFETIME) {
+                    await msg.delete().catch(() => {});
+                }
+            }
+        }
+    }
+
+    console.log("🧹 Old personal messages cleaned");
+}
+
 module.exports = (client) => {
 
     console.log("✅ alerts.js loaded");
+
+    // 🔥 Iniciar limpieza automática cuando el bot esté listo
+    client.once('ready', () => {
+        setInterval(() => {
+            cleanOldMessages(client);
+        }, 60 * 60 * 1000); // cada 1 hora
+    });
 
     client.on('messageCreate', async (message) => {
 
         try {
 
-            // Only listen to heartbeat channel
             if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
 
-            console.log("👀 Heartbeat detected");
-
-            // Get content (text or embed)
             let content = message.content;
 
             if ((!content || content.trim() === "") && message.embeds.length > 0) {
@@ -38,25 +68,19 @@ module.exports = (client) => {
             if (!content) return;
 
             const firstLine = content.split('\n')[0].trim();
-            console.log("Detected username:", firstLine);
 
             const registeredUsers = await loadUsers();
 
-            // Find user by name
             const entry = Object.entries(registeredUsers)
                 .find(([discordId, data]) =>
                     data.name.toLowerCase().trim() === firstLine.toLowerCase().trim()
                 );
 
-            if (!entry) {
-                console.log("❌ User not registered");
-                return;
-            }
+            if (!entry) return;
 
             const [discordId, userData] = entry;
             const guild = message.guild;
 
-            // 🔥 Channel name format
             const channelName = `personal-${userData.name
                 .toLowerCase()
                 .replace(/\s+/g, '-')}`;
@@ -65,72 +89,51 @@ module.exports = (client) => {
                 c => c.name === channelName
             );
 
-            // If channel already exists → just send message
-            if (userChannel) {
-                await userChannel.send(
-                    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
-                    `\`\`\`\n${content}\n\`\`\`\n` +
-                    `_This channel automatically tracks your reroll activity._`
-                );
+            if (!userChannel) {
 
-                console.log("📨 Sent to existing channel");
-                return;
+                const member = await guild.members.fetch(discordId).catch(() => null);
+                if (!member) return;
+
+                const championRole = guild.roles.cache.get(CHAMPION_ROLE_ID);
+                if (!championRole) return;
+
+                userChannel = await guild.channels.create({
+                    name: channelName,
+                    parent: CATEGORY_ID,
+                    permissionOverwrites: [
+                        {
+                            id: guild.id,
+                            deny: [PermissionFlagsBits.ViewChannel],
+                        },
+                        {
+                            id: member.id,
+                            allow: [
+                                PermissionFlagsBits.ViewChannel,
+                                PermissionFlagsBits.SendMessages,
+                                PermissionFlagsBits.ReadMessageHistory,
+                            ],
+                        },
+                        {
+                            id: championRole.id,
+                            allow: [
+                                PermissionFlagsBits.ViewChannel,
+                                PermissionFlagsBits.ReadMessageHistory,
+                            ],
+                        },
+                    ],
+                });
+
+                console.log("📁 Created:", channelName);
             }
-
-            // Check member exists
-            const member = await guild.members.fetch(discordId).catch(() => null);
-            if (!member) {
-                console.log("❌ User not in server:", discordId);
-                return;
-            }
-
-            const championRole = guild.roles.cache.get(CHAMPION_ROLE_ID);
-            if (!championRole) {
-                console.log("❌ Champion role not found");
-                return;
-            }
-
-            console.log("📁 Creating personal channel for", userData.name);
-
-            userChannel = await guild.channels.create({
-                name: channelName,
-                parent: CATEGORY_ID,
-                permissionOverwrites: [
-                    {
-                        id: guild.id,
-                        deny: [PermissionFlagsBits.ViewChannel],
-                    },
-                    {
-                        id: member.id,
-                        allow: [
-                            PermissionFlagsBits.ViewChannel,
-                            PermissionFlagsBits.SendMessages,
-                            PermissionFlagsBits.ReadMessageHistory,
-                        ],
-                    },
-                    {
-                        id: championRole.id,
-                        allow: [
-                            PermissionFlagsBits.ViewChannel,
-                            PermissionFlagsBits.ReadMessageHistory,
-                        ],
-                    },
-                ],
-            });
-
-            console.log("✅ Channel created");
 
             await userChannel.send(
                 `📡 **Heartbeat Update for ${userData.name}**\n\n` +
                 `\`\`\`\n${content}\n\`\`\`\n` +
-                `_This channel automatically tracks your reroll activity._`
+                `_Messages older than 24h are automatically deleted._`
             );
-
-            console.log("📨 First heartbeat sent");
 
         } catch (err) {
             console.error('🔥 Error in alerts.js:', err);
         }
     });
-
 };
