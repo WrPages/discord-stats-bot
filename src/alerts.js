@@ -3,7 +3,7 @@ const {
     PermissionFlagsBits 
 } = require('discord.js');
 
-const registeredUsers = require('../registered.json'); // ajusta ruta si es necesario
+const registeredUsers = require('../elite_users.json');
 
 const HEARTBEAT_CHANNEL_ID = '1483616146996465735';
 const CATEGORY_ID = '1488253270068691045'; // opcional
