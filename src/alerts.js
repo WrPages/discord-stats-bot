@@ -1,7 +1,4 @@
-const { 
-    ChannelType, 
-    PermissionFlagsBits 
-} = require('discord.js');
+const { PermissionFlagsBits } = require('discord.js');
 
 const HEARTBEAT_CHANNEL_ID = '1483616146996465735';
 const CATEGORY_ID = '1488253270068691045';
@@ -23,38 +20,37 @@ module.exports = (client) => {
 
         try {
 
-            // SOLO escuchar el canal heartbeat
+            // Solo escuchar el canal heartbeat
             if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
 
             console.log("👀 Heartbeat detectado");
 
-            // 🔥 NO bloquear bots (el heartbeat es de un bot)
-            // if (message.author.bot) return;  ❌ ELIMINADO
+            // 🔥 NO bloquear bots (el heartbeat viene de un bot)
+            // if (message.author.bot) return;
 
             // Obtener contenido real (texto o embed)
             let content = message.content;
 
-            if (!content && message.embeds.length > 0) {
+            if ((!content || content.trim() === "") && message.embeds.length > 0) {
                 content =
                     message.embeds[0].description ||
                     message.embeds[0].title ||
                     '';
             }
 
-            if (!content) {
+            if (!content || content.trim() === "") {
                 console.log("⚠ No hay contenido usable");
                 return;
             }
 
             const firstLine = content.split('\n')[0].trim();
-
             console.log("Nombre detectado:", firstLine);
 
             const registeredUsers = await loadUsers();
 
             const entry = Object.entries(registeredUsers)
                 .find(([discordId, data]) =>
-                    data.name.toLowerCase() === firstLine.toLowerCase()
+                    data.name.toLowerCase().trim() === firstLine.toLowerCase().trim()
                 );
 
             if (!entry) {
@@ -65,19 +61,22 @@ module.exports = (client) => {
             const [discordId, userData] = entry;
 
             const guild = message.guild;
-            const channelName = `reroll-${userData.name.toLowerCase().replace(/\s+/g, '-')}`;
+
+            const channelName = `reroll-${userData.name
+                .toLowerCase()
+                .replace(/\s+/g, '-')}`;
 
             let userChannel = guild.channels.cache.find(
                 c => c.name === channelName
             );
 
+            // Crear canal si no existe
             if (!userChannel) {
 
                 console.log("📁 Creando canal para", userData.name);
 
                 userChannel = await guild.channels.create({
                     name: channelName,
-                    type: ChannelType.GuildText,
                     parent: CATEGORY_ID,
                     permissionOverwrites: [
                         {
