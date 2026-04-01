@@ -12,7 +12,7 @@ const GIST_USERS_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748
 
 const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000;
 const CRASH_TIMEOUT = 45 * 60 * 1000;
-const UPDATE_INTERVAL = 10 * 60 * 1000; // update every 10 min
+const UPDATE_INTERVAL = 10 * 60 * 1000;
 
 const crashTimers = new Map();
 
@@ -46,14 +46,12 @@ async function removeFromEliteIDs(gameId) {
 
     await axios.patch(
         `https://api.github.com/gists/${ELITE_IDS_GIST_ID}`,
-        {
-            files: { [fileName]: { content: newList.join('\n') } }
-        },
+        { files: { [fileName]: { content: newList.join('\n') } } },
         { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } }
     );
 }
 
-// ================= PARSE ONLINE =================
+// ================= PARSERS =================
 function getOnlineInstances(content) {
     const match = content.match(/Online:\s(.+)/i);
     if (!match) return [];
@@ -64,20 +62,32 @@ function getOnlineInstances(content) {
         .filter(Boolean);
 }
 
-// ================= INACTIVITY CHECK =================
+function parseOffline(content) {
+    const match = content.match(/Offline:\s(.+)/i);
+    if (!match) return { count: 0, hasMain: false };
+
+    const list = match[1]
+        .split(',')
+        .map(x => x.trim().toLowerCase())
+        .filter(Boolean);
+
+    return {
+        count: list.filter(x => x !== 'main' && x !== 'none').length,
+        hasMain: list.includes('main')
+    };
+}
+
 function isInactive(content) {
     const online = getOnlineInstances(content);
 
     if (online.includes('none') || online.length === 0) return true;
 
-    // remove main
     const numericInstances = online.filter(x => x !== 'main');
 
-    // if only main active -> inactive
     return numericInstances.length === 0;
 }
 
-// ================= CLEAN MESSAGES =================
+// ================= CLEANUP =================
 async function cleanOldMessages(client) {
     const now = Date.now();
 
@@ -170,7 +180,7 @@ module.exports = (client) => {
                 });
             }
 
-            // Silent heartbeat
+            // ================= HEARTBEAT SILENT =================
             await userChannel.send({
                 content:
                     `📡 **Heartbeat Update for ${userData.name}**\n\n` +
@@ -179,6 +189,41 @@ module.exports = (client) => {
             });
 
             const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
+
+            // ================= OFFLINE ALERTS SYSTEM =================
+            const { ids } = await loadEliteIDs();
+            const isOnlineGame =
+                ids.includes(userData.main_id) ||
+                ids.includes(userData.sec_id);
+
+            const { count, hasMain } = parseOffline(content);
+
+            if (isOnlineGame) {
+
+                // 🟠 Numeric offline instances
+                if (count > 0) {
+                    const orange = new EmbedBuilder()
+                        .setColor(0xFFA500)
+                        .setDescription(
+                            `⚠️ ${member} You have **${count} offline instance${count > 1 ? 's' : ''}**.`
+                        );
+
+                    await userChannel.send({ embeds: [orange] });
+                    if (publicChannel) await publicChannel.send({ embeds: [orange] });
+                }
+
+                // 🔴 MAIN offline
+                if (hasMain) {
+                    const redMain = new EmbedBuilder()
+                        .setColor(0xFF0000)
+                        .setDescription(
+                            `🚨 ${member} Your **MAIN instance is OFFLINE**.`
+                        );
+
+                    await userChannel.send({ embeds: [redMain] });
+                    if (publicChannel) await publicChannel.send({ embeds: [redMain] });
+                }
+            }
 
             // ================= INACTIVITY DETECTOR =================
             const inactive = isInactive(content);
@@ -196,7 +241,6 @@ module.exports = (client) => {
 
                     const interval = setInterval(async () => {
                         elapsed += UPDATE_INTERVAL;
-
                         const remaining = Math.max(0, (CRASH_TIMEOUT - elapsed) / 60000);
 
                         await userChannel.send({
