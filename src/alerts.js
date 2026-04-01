@@ -20,15 +20,11 @@ module.exports = (client) => {
 
         try {
 
-            // Solo escuchar el canal heartbeat
             if (message.channel.id !== HEARTBEAT_CHANNEL_ID) return;
 
             console.log("👀 Heartbeat detectado");
 
-            // 🔥 NO bloquear bots (el heartbeat viene de un bot)
-            // if (message.author.bot) return;
-
-            // Obtener contenido real (texto o embed)
+            // Obtener contenido (texto o embed)
             let content = message.content;
 
             if ((!content || content.trim() === "") && message.embeds.length > 0) {
@@ -38,23 +34,21 @@ module.exports = (client) => {
                     '';
             }
 
-            if (!content || content.trim() === "") {
-                console.log("⚠ No hay contenido usable");
-                return;
-            }
+            if (!content) return;
 
             const firstLine = content.split('\n')[0].trim();
             console.log("Nombre detectado:", firstLine);
 
             const registeredUsers = await loadUsers();
 
+            // 🔥 Buscar por nombre y obtener el ID (clave del JSON)
             const entry = Object.entries(registeredUsers)
                 .find(([discordId, data]) =>
                     data.name.toLowerCase().trim() === firstLine.toLowerCase().trim()
                 );
 
             if (!entry) {
-                console.log("❌ Usuario no registrado:", firstLine);
+                console.log("❌ Usuario no registrado");
                 return;
             }
 
@@ -70,45 +64,63 @@ module.exports = (client) => {
                 c => c.name === channelName
             );
 
-            // Crear canal si no existe
-            if (!userChannel) {
-
-                console.log("📁 Creando canal para", userData.name);
-
-                userChannel = await guild.channels.create({
-                    name: channelName,
-                    parent: CATEGORY_ID,
-                    permissionOverwrites: [
-                        {
-                            id: guild.id,
-                            deny: [PermissionFlagsBits.ViewChannel],
-                        },
-                        {
-                            id: discordId,
-                            allow: [
-                                PermissionFlagsBits.ViewChannel,
-                                PermissionFlagsBits.SendMessages,
-                                PermissionFlagsBits.ReadMessageHistory,
-                            ],
-                        },
-                        {
-                            id: CHAMPION_ROLE_ID,
-                            allow: [
-                                PermissionFlagsBits.ViewChannel,
-                                PermissionFlagsBits.ReadMessageHistory,
-                            ],
-                        },
-                    ],
-                });
-
-                console.log("✅ Canal creado");
+            // 🔥 Si ya existe, solo enviar mensaje
+            if (userChannel) {
+                await userChannel.send(
+                    `📡 **Nuevo Heartbeat:**\n\`\`\`\n${content}\n\`\`\``
+                );
+                console.log("📨 Mensaje enviado al canal existente");
+                return;
             }
+
+            // 🔎 Verificar que el usuario esté en el servidor
+            const member = await guild.members.fetch(discordId).catch(() => null);
+            if (!member) {
+                console.log("❌ El usuario no está en el servidor:", discordId);
+                return;
+            }
+
+            const championRole = guild.roles.cache.get(CHAMPION_ROLE_ID);
+            if (!championRole) {
+                console.log("❌ Rol Champion no encontrado");
+                return;
+            }
+
+            console.log("📁 Creando canal para", userData.name);
+
+            userChannel = await guild.channels.create({
+                name: channelName,
+                parent: CATEGORY_ID,
+                permissionOverwrites: [
+                    {
+                        id: guild.id,
+                        deny: [PermissionFlagsBits.ViewChannel],
+                    },
+                    {
+                        id: member.id,
+                        allow: [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.SendMessages,
+                            PermissionFlagsBits.ReadMessageHistory,
+                        ],
+                    },
+                    {
+                        id: championRole.id,
+                        allow: [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.ReadMessageHistory,
+                        ],
+                    },
+                ],
+            });
+
+            console.log("✅ Canal creado");
 
             await userChannel.send(
                 `📡 **Nuevo Heartbeat:**\n\`\`\`\n${content}\n\`\`\``
             );
 
-            console.log("📨 Heartbeat reenviado");
+            console.log("📨 Mensaje enviado");
 
         } catch (err) {
             console.error('🔥 Error en alerts.js:', err);
