@@ -188,7 +188,7 @@ module.exports = (client) => {
                 const redEmbed = new EmbedBuilder()
                     .setColor(0xFF0000)
                     .setDescription(
-                        `🚨 ${member} Your **MAIN instance is OFFLINE**. Immediate attention required.`
+                        `🚨 ${member} Your **MAIN instance is OFFLINE**.`
                     )
                     .setTimestamp();
 
