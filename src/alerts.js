@@ -163,21 +163,24 @@ module.exports = (client) => {
             if (!member) return;
 
             const channelName = `personal-${userData.name.toLowerCase()}`;
-            let userChannel = guild.channels.cache.find(c => c.name === channelName);
+            let userChannel = guild.channels.cache.find(c =>
+  c.topic === `user:${discordId}`
+);
 
             if (!userChannel) {
 
                 const championRole = guild.roles.cache.get(CHAMPION_ROLE_ID);
 
-                userChannel = await guild.channels.create({
-                    name: channelName,
-                    parent: CATEGORY_ID,
-                    permissionOverwrites: [
-                        { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                        { id: member.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-                        { id: championRole.id, allow: [PermissionFlagsBits.ViewChannel] }
-                    ]
-                });
+               userChannel = await guild.channels.create({
+  name: channelName,
+  topic: `user:${discordId}`, // 🔥 IDENTIDAD REAL
+  parent: CATEGORY_ID,
+  permissionOverwrites: [
+    { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+    { id: member.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+    { id: championRole.id, allow: [PermissionFlagsBits.ViewChannel] }
+  ]
+});
             }
 
             // ================= HEARTBEAT SILENT =================
