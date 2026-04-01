@@ -3,7 +3,7 @@ const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const HEARTBEAT_CHANNEL_ID = '1483616146996465735';
 const CATEGORY_ID = '1488253270068691045';
 const CHAMPION_ROLE_ID = '1486206362332434634';
-const PUBLIC_ALERTS_CHANNEL_ID = '1484015417411244082';
+const PUBLIC_ALERTS_CHANNEL_ID = '1488766924321198080';
 
 const GIST_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json';
 
