@@ -1,19 +1,41 @@
-const { PermissionFlagsBits } = require('discord.js');
+const { PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 
 const HEARTBEAT_CHANNEL_ID = '1483616146996465735';
 const CATEGORY_ID = '1488253270068691045';
 const CHAMPION_ROLE_ID = '1486206362332434634';
+const PUBLIC_ALERTS_CHANNEL_ID = '1484015417411244082';
 
 const GIST_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json';
 
-const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000; // 24h
+const MESSAGE_LIFETIME = 24 * 60 * 60 * 1000; // 24h
 
+// 🔹 Load users from Gist
 async function loadUsers() {
     const response = await fetch(GIST_URL);
     if (!response.ok) throw new Error('Failed to load Gist');
     return await response.json();
 }
 
+// 🔹 Detect offline instances
+function parseOfflineInstances(content) {
+    const offlineMatch = content.match(/Offline:\s(.+)/i);
+    if (!offlineMatch) return { count: 0, hasMain: false };
+
+    const list = offlineMatch[1]
+        .split(',')
+        .map(x => x.trim().toLowerCase())
+        .filter(Boolean);
+
+    const hasMain = list.includes('main');
+    const numbered = list.filter(x => x !== 'main' && x !== 'none');
+
+    return {
+        count: numbered.length,
+        hasMain
+    };
+}
+
+// 🔹 Auto clean old bot messages (24h)
 async function cleanOldMessages(client) {
     const now = Date.now();
 
@@ -29,25 +51,28 @@ async function cleanOldMessages(client) {
 
             for (const msg of messages.values()) {
 
-                if (now - msg.createdTimestamp > MESSAGE_LIFETIME) {
+                if (
+                    msg.author.id === client.user.id &&
+                    now - msg.createdTimestamp > MESSAGE_LIFETIME
+                ) {
                     await msg.delete().catch(() => {});
                 }
             }
         }
     }
 
-    console.log("🧹 Old personal messages cleaned");
+    console.log("🧹 Old bot messages cleaned");
 }
 
 module.exports = (client) => {
 
     console.log("✅ alerts.js loaded");
 
-    // 🔥 Iniciar limpieza automática cuando el bot esté listo
+    // 🔹 Start auto-clean every hour
     client.once('ready', () => {
         setInterval(() => {
             cleanOldMessages(client);
-        }, 60 * 60 * 1000); // cada 1 hora
+        }, 60 * 60 * 1000);
     });
 
     client.on('messageCreate', async (message) => {
@@ -122,15 +147,56 @@ module.exports = (client) => {
                         },
                     ],
                 });
-
-                console.log("📁 Created:", channelName);
             }
 
-            await userChannel.send(
-                `📡 **Heartbeat Update for ${userData.name}**\n\n` +
-                `\`\`\`\n${content}\n\`\`\`\n` +
-                `_Messages older than 24h are automatically deleted._`
-            );
+            // 🔕 Silent heartbeat message
+            await userChannel.send({
+                content:
+                    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
+                    `\`\`\`\n${content}\n\`\`\`\n` +
+                    `_Messages older than 24h are automatically deleted._`,
+                flags: 4096 // suppress notification
+            });
+
+            // 🔥 OFFLINE ALERT SYSTEM
+            const { count, hasMain } = parseOfflineInstances(content);
+
+            const member = await guild.members.fetch(discordId).catch(() => null);
+            if (!member) return;
+
+            const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
+
+            // 🟠 Numbered instances offline
+            if (count > 0) {
+
+                const orangeEmbed = new EmbedBuilder()
+                    .setColor(0xFFA500)
+                    .setDescription(
+                        `⚠️ ${member} You have **${count} offline instance${count > 1 ? 's' : ''}**.`
+                    )
+                    .setTimestamp();
+
+                await userChannel.send({ embeds: [orangeEmbed] });
+                if (publicChannel) {
+                    await publicChannel.send({ embeds: [orangeEmbed] });
+                }
+            }
+
+            // 🔴 MAIN offline
+            if (hasMain) {
+
+                const redEmbed = new EmbedBuilder()
+                    .setColor(0xFF0000)
+                    .setDescription(
+                        `🚨 ${member} Your **MAIN instance is OFFLINE**. Immediate attention required.`
+                    )
+                    .setTimestamp();
+
+                await userChannel.send({ embeds: [redEmbed] });
+                if (publicChannel) {
+                    await publicChannel.send({ embeds: [redEmbed] });
+                }
+            }
 
         } catch (err) {
             console.error('🔥 Error in alerts.js:', err);
