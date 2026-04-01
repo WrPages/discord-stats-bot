@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
+const alerts = require('./alerts');
 
 // 🔐 TOKENS
 const TOKEN = process.env.LATIOS_TOKEN;
@@ -26,7 +27,7 @@ const panelChannelId = "1488126321786753156";
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
-
+alerts(client);
 let panelMessage = null;
 let lastTotalPPM = 0;
 let cachedAvgPPM = "0.00";
