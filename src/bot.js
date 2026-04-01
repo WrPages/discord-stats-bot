@@ -25,7 +25,7 @@ const panelChannelId = "1488126321786753156";
 
 // 🤖 CLIENT
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent]
 });
