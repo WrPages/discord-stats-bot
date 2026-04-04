@@ -233,6 +233,31 @@ module.exports = (client) => {
 
             if (inactive) {
 
+                
+                    // 🔍 Check current elite IDs
+const { ids: freshIds } = await loadEliteIDs();
+
+const stillOnline =
+    freshIds.includes(userData.main_id) ||
+    freshIds.includes(userData.sec_id);
+
+// ❌ If user is no longer online → cancel timer silently
+if (!stillOnline) {
+
+    if (crashTimers.has(discordId)) {
+
+        const { timeout, interval } = crashTimers.get(discordId);
+
+        clearTimeout(timeout);
+        clearInterval(interval);
+
+        crashTimers.delete(discordId);
+    }
+
+    return; // Stop everything silently
+}
+                
+
                 if (!crashTimers.has(discordId)) {
 
                     let elapsed = 0;
