@@ -12,16 +12,16 @@ if (!TOKEN) {
 }
 
 // 📊 CONFIG
-const statsUrl = "https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json";
-const onlineUrl = "https://gist.githubusercontent.com/WrPages/d9db3a72fed74c496fd6cc830f9ca6e9/raw/elite_ids.txt";
+const statsUrl = process.env.USERS;
+const onlineUrl = process.env.ONLINE_IDS;
 
 const ppmGistId = "fb7dd70fceaa1743943e67176352ffbd";
 const ppmFileName = "ppm.json";
 
-const gpUrl = "https://gist.githubusercontent.com/WrPages/4773653072f4851e91958a333e503de9/raw/gp_live_stats.json";
+const gpUrl = process.env.GP_STATS;
 
-const heartbeatChannelId = "1483616146996465735";
-const panelChannelId = "1488126321786753156";
+const heartbeatChannelId = process.env.HB_CHANNEL;
+const panelChannelId = process.env.PANEL_CHANNEL;
 
 // 🤖 CLIENT
 const client = new Client({
