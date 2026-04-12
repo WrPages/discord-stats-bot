@@ -9,6 +9,7 @@ const PUBLIC_ALERTS_CHANNEL_ID = '1488766924321198080';
 const ELITE_IDS_GIST_ID = 'd9db3a72fed74c496fd6cc830f9ca6e9';
 
 const GIST_USERS_URL = 'https://gist.githubusercontent.com/WrPages/bb18eda2ea748723d8fe0131dd740b70/raw/elite_users.json';
+const GLOBAL_HEARTBEAT_CHANNEL_ID = '1492795826857054301';
 
 const MESSAGE_LIFETIME = 12 * 60 * 60 * 1000;
 const CRASH_TIMEOUT = 45 * 60 * 1000;
@@ -185,10 +186,50 @@ module.exports = (client) => {
 
             // ================= HEARTBEAT SILENT =================
             await userChannel.send({
-                content:
-                    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
-                    `\`\`\`\n${content}\n\`\`\``,
-                flags: 4096
+              // ================= HEARTBEAT SILENT =================
+const heartbeatMessage =
+    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
+    `\`\`\`\n${content}\n\`\`\``;
+
+await userChannel.send({
+    content: heartbeatMessage,
+    flags: 4096
+});
+
+// ================= GLOBAL HEARTBEAT =================
+const globalChannel = guild.channels.cache.get(GLOBAL_HEARTBEAT_CHANNEL_ID);
+
+if (globalChannel) {
+
+    // ✅ OPCIÓN 1: enviar cada heartbeat individual
+    await globalChannel.send({
+        content: `👤 **${userData.name}**\n\`\`\`\n${content}\n\`\`\``
+    });
+
+    // ================= OPCIÓN 2 (PRO): RESUMEN GLOBAL =================
+
+    if (!client.heartbeatMap) client.heartbeatMap = new Map();
+
+    // Guardar último estado de cada usuario
+    client.heartbeatMap.set(userData.name, content);
+
+    // Construir resumen completo
+    let summary = "📡 **GLOBAL HEARTBEATS**\n\n";
+
+    for (const [name, hb] of client.heartbeatMap.entries()) {
+        summary += `👤 **${name}**\n\`\`\`\n${hb}\n\`\`\`\n`;
+    }
+
+    // Buscar si ya existe mensaje anterior del bot
+    const messages = await globalChannel.messages.fetch({ limit: 10 });
+    const botMsg = messages.find(m => m.author.id === client.user.id);
+
+    if (botMsg) {
+        await botMsg.edit(summary);
+    } else {
+        await globalChannel.send(summary);
+    }
+}
             });
 
             const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
