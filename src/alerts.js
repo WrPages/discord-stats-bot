@@ -186,41 +186,31 @@ module.exports = (client) => {
 
             // ================= HEARTBEAT SILENT =================
             await userChannel.send({
-              // ================= HEARTBEAT SILENT =================
-const heartbeatMessage =
-    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
-    `\`\`\`\n${content}\n\`\`\``;
+                   content:
+                    `📡 **Heartbeat Update for ${userData.name}**\n\n` +
+                    `\`\`\`\n${content}\n\`\`\``,
+                flags: 4096
+            });
 
-await userChannel.send({
-    content: heartbeatMessage,
-    flags: 4096
-});
-
-// ================= GLOBAL HEARTBEAT =================
+             // ================= GLOBAL HEARTBEAT =================
 const globalChannel = guild.channels.cache.get(GLOBAL_HEARTBEAT_CHANNEL_ID);
 
 if (globalChannel) {
 
-    // ✅ OPCIÓN 1: enviar cada heartbeat individual
-    await globalChannel.send({
-        content: `👤 **${userData.name}**\n\`\`\`\n${content}\n\`\`\``
-    });
-
-    // ================= OPCIÓN 2 (PRO): RESUMEN GLOBAL =================
-
+    // Inicializar mapa global si no existe
     if (!client.heartbeatMap) client.heartbeatMap = new Map();
 
-    // Guardar último estado de cada usuario
+    // Guardar último heartbeat del usuario
     client.heartbeatMap.set(userData.name, content);
 
     // Construir resumen completo
-    let summary = "📡 **GLOBAL HEARTBEATS**\n\n";
+   let summary = "";
 
-    for (const [name, hb] of client.heartbeatMap.entries()) {
-        summary += `👤 **${name}**\n\`\`\`\n${hb}\n\`\`\`\n`;
-    }
+for (const hb of client.heartbeatMap.values()) {
+    summary += `\`\`\`\n${hb}\n\`\`\`\n`;
+}
 
-    // Buscar si ya existe mensaje anterior del bot
+    // Buscar mensaje anterior del bot
     const messages = await globalChannel.messages.fetch({ limit: 10 });
     const botMsg = messages.find(m => m.author.id === client.user.id);
 
@@ -230,7 +220,6 @@ if (globalChannel) {
         await globalChannel.send(summary);
     }
 }
-            });
 
             const publicChannel = guild.channels.cache.get(PUBLIC_ALERTS_CHANNEL_ID);
 
